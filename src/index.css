@@ -1,0 +1,10 @@
+@import "tailwindcss";
+:root {
+  --blue: #0d99ff;
+  --blue-hover: #70c7ff;
+  --primary-text: #1e1e1e;
+  --red: #e75f61;
+}
+* {
+  box-sizing: border-box;
+}

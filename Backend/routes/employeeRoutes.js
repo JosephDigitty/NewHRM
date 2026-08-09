@@ -1,0 +1,27 @@
+
+
+import express from 'express'
+import authMiddleware from "../middleware/authMiddleware.js"
+import {addEmployee, upload, getAllEmployee, getEmployee, editEmployee, getEmployeesByDepartment} from '../Controllers/employeeContollers.js'
+const router = express.Router()
+
+router.post(
+  "/add",
+  upload.fields([
+    { name: "offerLetter", maxCount: 1 },
+    { name: "resume", maxCount: 1 },
+    { name: "nationalId", maxCount: 1 },
+    { name: "passport", maxCount: 1 },
+  ]),
+  addEmployee
+);
+
+router.get('/', getAllEmployee)
+router.get('/department/:id', getEmployeesByDepartment)
+router.get('/:id', getEmployee)
+router.put('/:id', editEmployee)
+// router.delete('/:id', deleteDepartment)
+// router.post('/add', upload.single('image'), addEmployee)
+
+
+export default router
