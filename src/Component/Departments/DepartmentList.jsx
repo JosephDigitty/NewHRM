@@ -7,57 +7,12 @@ import { api } from "../../api/request";
 import {
   Download,
   Plus,
-  Search,
-  ArrowUpDown,
-  LayoutList,
-  LayoutGrid,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const CustomPagination = ({ currentPage, rowsPerPage, rowCount, onPageChange }) => {
-  const totalPages = Math.max(1, Math.ceil(rowCount / rowsPerPage));
-  const start = rowCount === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
-  const end = Math.min(currentPage * rowsPerPage, rowCount);
-
-  return (
-    <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100">
-      <div className="text-sm text-gray-500">
-        Showing {start} to {end} of {rowCount} departments
-      </div>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <ChevronLeft size={18} />
-        </button>
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-          <button
-            key={page}
-            onClick={() => onPageChange(page)}
-            className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
-              currentPage === page
-                ? "bg-purple-600 text-white"
-                : "border border-gray-200 text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            {page}
-          </button>
-        ))}
-        <button
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <ChevronRight size={18} />
-        </button>
-      </div>
-    </div>
-  );
-};
+import CustomPagination from "../reuseables/CustomPagination";
+import PageHeader from "../reuseables/PageHeader";
+import TableToolbar from "../reuseables/TableToolbar";
+import StatCard from "../reuseables/StatCard";
 
 const DepartmentList = () => {
   const [department, setdepartment] = useState([]);
@@ -188,6 +143,21 @@ const DepartmentList = () => {
     setFilteredDepartments(filtered);
   }, [searchQuery, sortBy, department]);
 
+  const sortOptions = [
+    { value: "name-asc", label: "Sort by: Department Name (A-Z)" },
+    { value: "name-desc", label: "Sort by: Department Name (Z-A)" },
+    { value: "employees-asc", label: "Sort by: Employees (Low to High)" },
+    { value: "employees-desc", label: "Sort by: Employees (High to Low)" },
+  ];
+
+  const totalEmployees = department.reduce(
+    (sum, dep) => sum + dep.employeeCount,
+    0
+  );
+  const assignedHeads = department.filter(
+    (dep) => dep.departmentHead !== "Not assigned"
+  ).length;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {depLoading ? (
@@ -196,43 +166,34 @@ const DepartmentList = () => {
         </div>
       ) : (
         <div className="mx-auto px-6 py-8">
-          {/* Header Section */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Departments
-                </h1>
-                <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">
-                  {department.length} Total Departments
-                </span>
-              </div>
-              <p className="text-gray-500 text-sm">
-                Manage and organize all departments in the organization.
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleExport}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                <Download size={16} />
-                Export
-              </button>
-              <Link
-                to="/admin-dashboard/departments/add"
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
-              >
-                <Plus size={16} />
-                Add Department
-              </Link>
-            </div>
-          </div>
+          <PageHeader
+            title="Departments"
+            count={department.length}
+            countLabel="Total Departments"
+            description="Manage and organize all departments in the organization."
+            actions={
+              <>
+                <button
+                  onClick={handleExport}
+                  className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <Download size={16} />
+                  Export
+                </button>
+                <Link
+                  to="/admin-dashboard/departments/add"
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                >
+                  <Plus size={16} />
+                  Add Department
+                </Link>
+              </>
+            }
+          />
 
-          {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
-              <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center">
+            <StatCard
+              icon={
                 <div
                   className="w-6 h-6 bg-purple-600 rounded"
                   style={{
@@ -240,119 +201,54 @@ const DepartmentList = () => {
                       "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
                   }}
                 ></div>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {department.length}
-                </p>
-                <p className="text-xs text-gray-500">All departments</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+              }
+              iconBg="bg-purple-50"
+              title="All departments"
+              value={department.length}
+            />
+            <StatCard
+              icon={
                 <div className="flex -space-x-1">
                   <div className="w-3 h-3 bg-green-600 rounded-full"></div>
                   <div className="w-3 h-3 bg-green-600 rounded-full"></div>
                 </div>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {department.reduce((sum, dep) => sum + dep.employeeCount, 0)}
-                </p>
-                <p className="text-xs text-gray-500">Across all departments</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
-              <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center">
+              }
+              iconBg="bg-green-50"
+              title="Across all departments"
+              value={totalEmployees}
+            />
+            <StatCard
+              icon={
                 <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {department.length}
-                </p>
-                <p className="text-xs text-gray-500">Currently active</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+              }
+              iconBg="bg-orange-50"
+              title="Currently active"
+              value={department.length}
+            />
+            <StatCard
+              icon={
                 <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-blue-600 rounded-t-full"></div>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {
-                    department.filter(
-                      (dep) => dep.departmentHead !== "Not assigned",
-                    ).length
-                  }
-                </p>
-                <p className="text-xs text-gray-500">Assigned heads</p>
-              </div>
-            </div>
+              }
+              iconBg="bg-blue-50"
+              title="Assigned heads"
+              value={assignedHeads}
+            />
           </div>
 
-          {/* Search, Sort, and View Toggle */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-4">
-            <div className="relative flex-1 max-w-md">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                size={18}
-              />
-              <input
-                type="text"
-                placeholder="Search department..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="appearance-none pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
-                >
-                  <option value="name-asc">
-                    Sort by: Department Name (A-Z)
-                  </option>
-                  <option value="name-desc">
-                    Sort by: Department Name (Z-A)
-                  </option>
-                  <option value="employees-asc">
-                    Sort by: Employees (Low to High)
-                  </option>
-                  <option value="employees-desc">
-                    Sort by: Employees (High to Low)
-                  </option>
-                </select>
-                <ArrowUpDown
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                  size={16}
-                />
-              </div>
-              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2.5 ${viewMode === "list" ? "bg-purple-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}
-                >
-                  <LayoutList size={18} />
-                </button>
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2.5 ${viewMode === "grid" ? "bg-purple-600 text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}
-                >
-                  <LayoutGrid size={18} />
-                </button>
-              </div>
-            </div>
-          </div>
+          <TableToolbar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchPlaceholder="Search department..."
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            sortOptions={sortOptions}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            viewModeOptions={["list", "grid"]}
+          />
 
-          {/* Table */}
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <DataTable
               columns={columns}
