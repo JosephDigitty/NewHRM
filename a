@@ -1,0 +1,3 @@
+<div className="mt-4 text-sm text-gray-500">
+            Showing 1 to {filteredDepartments.length} of {filteredDepartments.length} departments
+          </div>

@@ -1,4 +1,4 @@
-import axios from "axios";
+
 import { useEffect, useState } from "react";
 import { useAuth } from "../Context/authContext";
 import { useNavigate } from "react-router-dom";
@@ -23,27 +23,27 @@ const Login = () => {
   const images = [image1, image2, image3];
 
   const getDashboardPath = (user) => {
-  if (user.role === "admin") {
-    return "/admin-dashboard";
-  }
-
-  if (user.role === "employee") {
-    // Standardize position string (remove trailing/leading whitespace and ignore casing)
-    const position = user.position?.trim().toLowerCase();
-
-    if (position === "accountant") {
-      return "/accountant-dashboard";
+    if (user.role === "admin") {
+      return "/admin-dashboard";
     }
 
-    if (position === "director") {
-      return "/position-dashboard";
+    if (user.role === "employee") {
+      // Standardize position string (remove trailing/leading whitespace and ignore casing)
+      const position = user.position?.trim().toLowerCase();
+
+      if (position === "accountant") {
+        return "/accountant-dashboard";
+      }
+
+      if (position === "director") {
+        return "/position-dashboard";
+      }
+
+      return "/employee-dashboard";
     }
 
-    return "/employee-dashboard";
-  }
-
-  return "/employee-dashboard"; // Default fallback route
-};
+    return "/employee-dashboard"; // Default fallback route
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -53,30 +53,32 @@ const Login = () => {
   }, []);
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    const response = await api.post("/auth/login", {
-      email,
-      password,
-    });
+    try {
+      const response = await api.post("/auth/login", {
+        email,
+        password,
+      });
 
-    if (response.data.success) {
-      const { user, token } = response.data;
+      if (response.data.success) {
+        const { user, token } = response.data;
 
-      login(user);
-      localStorage.setItem("token", token);
+        login(user);
+        localStorage.setItem("token", token);
 
-      const targetPath = getDashboardPath(user);
-      navigate(targetPath);
+        const targetPath = getDashboardPath(user);
+        navigate(targetPath);
+      }
+    } catch (error) {
+      showError(
+        error.response?.data?.error || "Failed to login. Please try again.",
+      );
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    showError(error.response?.data?.error || "Failed to login. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="flex h-screen">
@@ -97,18 +99,15 @@ const Login = () => {
 
         {/* Overlay text & app badges */}
         <div className="absolute bottom-8 left-8 text-white">
-          <h2 className="text-lg font-semibold mb-3">
-            Download your Employee Management App
+          <h2 className="text-2xl font-semibold mb-3">
+           Employee Management App
           </h2>
-          <div className="flex gap-4 mb-5">
-            <img src="/appstore.png" alt="App Store" width={120} />
-            <img src="/playstore.png" alt="Google Play" width={120} />
-          </div>
+         
           <div className="text-xs flex flex-wrap gap-4 opacity-90">
-            <a href="#" className="hover:underline">Terms & Conditions</a>
-            <a href="#" className="hover:underline">Contact Us</a>
-            <a href="#" className="hover:underline">Privacy Policy</a>
-            <a href="#" className="hover:underline">Help</a>
+            <a className="hover:underline">Terms & Conditions</a>
+            <a className="hover:underline">Contact Us</a>
+            <a className="hover:underline">Privacy Policy</a>
+            <a className="hover:underline">Help</a>
           </div>
           <p className="text-xs mt-2 opacity-70">© 2025 Diggity Inc.</p>
         </div>
@@ -119,25 +118,15 @@ const Login = () => {
         {/* Logo + title */}
         <div className="w-full max-w-md mb-8 text-center">
           {/* <img src={'logo'} alt="Logo" className="mx-auto w-24 mb-4" /> */}
-          <h2 className="text-2xl font-bold text-[#0a2d5e]">
-            Emplora
-          </h2>
-          <p className="text-gray-600 mt-1">Welcome back! Please sign in to continue.</p>
+          <h2 className="text-2xl font-bold text-[#0a2d5e]">Emplora</h2>
+          <p className="text-gray-600 mt-1">
+            Welcome back! Please sign in to continue.
+          </p>
         </div>
 
         {/* Login Form */}
         <div className="w-full max-w-md border border-gray-200 rounded-lg p-6 shadow-lg">
           <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <select
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                defaultValue="Online Banking"
-              >
-                <option>Admin Login</option>
-                <option>Employee Login</option>
-              </select>
-            </div>
-
             <Input
               label="Username"
               name="email"
@@ -160,12 +149,6 @@ const Login = () => {
               className="mb-2"
             />
 
-            <div className="text-right text-sm mb-4">
-              <a href="#" className="text-blue-600 hover:underline">
-                Forgot your password?
-              </a>
-            </div>
-
             <button
               type="submit"
               disabled={loading}
@@ -175,17 +158,6 @@ const Login = () => {
               {loading ? "Signing In..." : "Sign In"}
             </button>
           </form>
-
-          <div className="text-sm text-center mt-4 space-y-1">
-            <p>
-              New Account?{" "}
-              <a href="#" className="text-blue-600 hover:underline">Register Here</a>
-            </p>
-            <p>
-              Corporate Account?{" "}
-              <a href="#" className="text-blue-600 hover:underline">Register Here</a>
-            </p>
-          </div>
 
           <p className="text-xs text-gray-500 text-center mt-4">
             Licensed and regulated by the Central Bank.
@@ -197,6 +169,3 @@ const Login = () => {
 };
 
 export default Login;
-
-
-
