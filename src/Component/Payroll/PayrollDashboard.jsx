@@ -348,7 +348,7 @@ const PayrollDashboard = () => {
   return (
     <>
       <main className="flex-1 p-8">
-        <div className="max-w-7xl mx-auto">
+        <div className=" mx-auto">
           <Breadcrumb periodName={payrollDetails.periodName} />
 
           <PageHeader
