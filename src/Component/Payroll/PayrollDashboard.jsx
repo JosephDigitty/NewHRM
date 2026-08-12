@@ -3,46 +3,128 @@ import {
   MdAccountBalance,
   MdPerson,
   MdReceiptLong,
-  MdRequestQuote,
-  MdAddCard,
   MdAccountBalanceWallet,
-  MdHealthAndSafety
+  MdEvent,
+  MdFilterList,
+  MdChevronLeft,
+  MdChevronRight,
+  MdDownload,
+  MdExpandMore
 } from "react-icons/md";
-import ActionCard from "./PayrollReuseables/ActionCard";
-import TableHeader from "./PayrollReuseables/TableHeaders";
-import PayrollRow from "./PayrollReuseables/PayrollRow";
 import Modal from "../reuseables/Modal";
 import CreatePayroll from "./CreatePayroll";
 import { getAllPayroll, getMonthlyPayrollData } from "../../utils/DyamicDashboard";
 import { api } from "../../api/request";
+import Breadcrumb from "./PayrollReuseables/Breadcrumb";
+import PageHeader from "./PayrollReuseables/PageHeader";
+import StatsCards from "./PayrollReuseables/StatsCards";
+import WorkflowSection from "./PayrollReuseables/WorkflowSection";
+import Tabs from "./PayrollReuseables/Tabs";
+import Pagination from "./PayrollReuseables/Pagination";
+import EmployeeTable from "./PayrollReuseables/EmployeeTable";
+import PayrollBreakdownTab from "./PayrollReuseables/PayrollBreakdownTab";
+import ApprovalWorkflowTab from "./PayrollReuseables/ApprovalWorkflowTab";
+import AuditTrailTab from "./PayrollReuseables/AuditTrailTab";
 
 const PayrollDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [chartData, setChartData] = useState([])
-  const [payrolls, setPayrolls] = useState([])
-  const currentYear = new Date().getFullYear()
+  const [chartData, setChartData] = useState([]);
+  const [payrolls, setPayrolls] = useState([]);
+  const [activeTab, setActiveTab] = useState("Payroll Summary");
+  const [payrollDetails, setPayrollDetails] = useState({
+    periodName: "September 2026 Payroll",
+    status: "Draft",
+    dateRange: "September 1 - September 30, 2026",
+    totalEmployees: 42,
+    grossPayroll: 18450000,
+    totalDeductions: 2180000,
+    totalNetPay: 16270000,
+    preparedBy: { name: "HR Admin", role: "HR Manager" },
+    submittedAt: "Sept 25, 2026 · 10:45 AM",
+    nextApproval: { name: "Accounts Department", role: "Review & Approval" },
+    lastUpdated: "Sept 25, 2026 · 10:45 AM",
+  });
+  const [employees, setEmployees] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const totalPages = Math.max(1, Math.ceil(employees.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, employees.length);
+  const paginatedEmployees = employees.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handlePrev = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
+
+  const currentYear = new Date().getFullYear();
+
   useEffect(() => {
     const fetch = async () => {
-      const res = await api.get(`/employee/payroll/activities?year=${currentYear}`)
-      if (res.data.success) {
-        setPayrolls(res.data.payrolls)
-        console.log(res.data)
-        } else {
-          console.log(res.data)
+      try {
+        const res = await api.get(`/employee/payroll/activities?year=${currentYear}`);
+        if (res.data.success) {
+          setPayrolls(res.data.payrolls);
         }
-    } 
-    fetch()
-  }, [])
+      } catch (error) {
+        console.error("Error fetching payroll data:", error);
+      }
+    };
+    fetch();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
-      const payrolls = await getAllPayroll()
-      setPayrolls(payrolls)
-      setChartData(getMonthlyPayrollData(payrolls))
-      console.log(chartData)
-    }
-    fetchData()
-  }, [])
+      const payrolls = await getAllPayroll();
+      setPayrolls(payrolls);
+      setChartData(getMonthlyPayrollData(payrolls));
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const getActivities = async () => {
+      try {
+        const res = await api.get("/employee/payroll/activities");
+        if (res.data.success) {
+          const payrolls = res.data.payrolls;
+          const grouped = payrolls.reduce((acc, payroll) => {
+            const month = new Date(payroll.payDate).toLocaleString("default", {
+              month: "long",
+              year: "numeric",
+            });
+            if (!acc[month]) {
+              acc[month] = {
+                payrollPeriodName: payroll.payrollperiodName,
+                totalNetSalary: 0,
+                totalEarnings: 0,
+                employeeCount: 0,
+                status: payroll.status,
+                payDate: payroll.payDate,
+              };
+            }
+            acc[month].totalNetSalary += payroll.netSalary || 0;
+            acc[month].totalEarnings += payroll.totalEarnings || 0;
+            acc[month].employeeCount += 1;
+            return acc;
+          }, {});
+          const result = Object.values(grouped);
+          setPayrolls(result);
+        }
+      } catch (error) {
+        console.error("Error fetching payroll activities:", error);
+      }
+    };
+    getActivities();
+  }, []);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -51,176 +133,331 @@ const PayrollDashboard = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
-//payrow 
+
+  const tabs = [
+    "Payroll Summary",
+    "Payroll Breakdown",
+    "Approval Workflow",
+    "Audit Trail",
+  ];
+
+  const mockEmployees = [
+    {
+      name: "Windy Gold",
+      department: "Business Development",
+      grade: "Full Staff",
+      basicSalary: "₦300,000.00",
+      housingAllow: "₦20,000.00",
+      wardrobeAllow: "₦10,000.00",
+      transportAllow: "₦50,000.00",
+      medicalAllow: "₦12,000.00",
+      netPay: "₦314,152.53",
+    },
+    {
+      name: "Kelechi Amadi",
+      department: "Information Technology",
+      grade: "Junior Staff -2",
+      basicSalary: "₦280,000.00",
+      housingAllow: "₦12,000.00",
+      wardrobeAllow: "₦8,000.00",
+      transportAllow: "₦40,000.00",
+      medicalAllow: "₦9,000.00",
+      netPay: "₦281,103.41",
+    },
+    {
+      name: "Hauwa Lawal",
+      department: "Finance & Accounts",
+      grade: "Junior Staff -2",
+      basicSalary: "₦280,000.00",
+      housingAllow: "₦12,000.00",
+      wardrobeAllow: "₦8,000.00",
+      transportAllow: "₦40,000.00",
+      medicalAllow: "₦9,000.00",
+      netPay: "₦281,103.41",
+    },
+    {
+      name: "Samuel Obi",
+      department: "Business Development",
+      grade: "Senior Staff -1",
+      basicSalary: "₦310,000.00",
+      housingAllow: "₦24,000.00",
+      wardrobeAllow: "₦18,000.00",
+      transportAllow: "₦40,000.00",
+      medicalAllow: "₦9,000.00",
+      netPay: "₦178,800.69",
+    },
+    {
+      name: "Blessing Udo",
+      department: "Research",
+      grade: "Senior Staff -1",
+      basicSalary: "₦400,000.00",
+      housingAllow: "₦12,000.00",
+      wardrobeAllow: "₦8,000.00",
+      transportAllow: "₦40,000.00",
+      medicalAllow: "₦9,000.00",
+      netPay: "₦371,068.05",
+    },
+  ];
+
   useEffect(() => {
-  const getActivities = async () => {
-    const res = await api.get("/employee/payroll/activities")
-    if (res.data.success) {
-      const payrolls = res.data.payrolls
+    setEmployees(mockEmployees);
+  }, []);
 
-      // Group by month
-      const grouped = payrolls.reduce((acc, payroll) => {
-        const month = new Date(payroll.payDate).toLocaleString("default", { month: "long", year: "numeric" })
-        
-        if (!acc[month]) {
-          acc[month] = {
-            payrollPeriodName: payroll.payrollperiodName,
-            totalNetSalary: 0,
-            totalEarnings: 0,
-            employeeCount: 0,
-            status: payroll.status,
-            payDate: payroll.payDate,
-          }
-        }
-        acc[month].totalNetSalary += payroll.netSalary || 0
-        acc[month].totalEarnings += payroll.totalEarnings || 0
-        acc[month].employeeCount += 1
+  const mockBreakdowns = [
+    {
+      name: "Windy Gold",
+      department: "Business Development",
+      grade: "Full Staff",
+      basicSalary: 300000,
+      housingAllow: 20000,
+      wardrobeAllow: 10000,
+      transportAllow: 50000,
+      medicalAllow: 12000,
+      grossPay: 392000,
+      deductions: 77847.47,
+      netPay: 314152.53,
+    },
+    {
+      name: "Kelechi Amadi",
+      department: "Information Technology",
+      grade: "Junior Staff -2",
+      basicSalary: 280000,
+      housingAllow: 12000,
+      wardrobeAllow: 8000,
+      transportAllow: 40000,
+      medicalAllow: 9000,
+      grossPay: 349000,
+      deductions: 67896.59,
+      netPay: 281103.41,
+    },
+    {
+      name: "Hauwa Lawal",
+      department: "Finance & Accounts",
+      grade: "Junior Staff -2",
+      basicSalary: 280000,
+      housingAllow: 12000,
+      wardrobeAllow: 8000,
+      transportAllow: 40000,
+      medicalAllow: 9000,
+      grossPay: 349000,
+      deductions: 67896.59,
+      netPay: 281103.41,
+    },
+    {
+      name: "Samuel Obi",
+      department: "Business Development",
+      grade: "Senior Staff -1",
+      basicSalary: 310000,
+      housingAllow: 24000,
+      wardrobeAllow: 18000,
+      transportAllow: 40000,
+      medicalAllow: 9000,
+      grossPay: 401000,
+      deductions: 222199.31,
+      netPay: 178800.69,
+    },
+    {
+      name: "Blessing Udo",
+      department: "Research",
+      grade: "Senior Staff -1",
+      basicSalary: 400000,
+      housingAllow: 12000,
+      wardrobeAllow: 8000,
+      transportAllow: 40000,
+      medicalAllow: 9000,
+      grossPay: 469000,
+      deductions: 97931.95,
+      netPay: 371068.05,
+    },
+  ];
 
-        return acc
-      }, {})
+  const mockWorkflow = [
+    {
+      step: "Draft",
+      title: "Draft Created",
+      description: "Payroll was created by HR Admin",
+      date: "Sept 24, 2026 · 9:00 AM",
+      status: "completed",
+      actor: "HR Admin",
+    },
+    {
+      step: "Submitted",
+      title: "Submitted for Review",
+      description: "Payroll submitted for accounts review",
+      date: "Sept 25, 2026 · 10:45 AM",
+      status: "current",
+      actor: "HR Admin",
+    },
+    {
+      step: "Approval",
+      title: "Accounts Review",
+      description: "Pending approval by Accounts Department",
+      date: "",
+      status: "pending",
+      actor: "Accounts Department",
+    },
+    {
+      step: "Published",
+      title: "Publish Payroll",
+      description: "Payroll will be published after approval",
+      date: "",
+      status: "pending",
+      actor: "System",
+    },
+  ];
 
-      // Convert object to array
-      const result = Object.values(grouped)
-      setPayrolls(result)
-    }
-  }
-  getActivities()
-}, [])
+  const mockAuditTrail = [
+    {
+      action: "Created",
+      description: "Payroll draft created by HR Admin",
+      user: "HR Admin",
+      role: "HR Manager",
+      timestamp: "Sept 24, 2026 · 9:00 AM",
+      ip: "192.168.1.1",
+    },
+    {
+      action: "Updated",
+      description: "Updated employee earnings and deductions",
+      user: "HR Admin",
+      role: "HR Manager",
+      timestamp: "Sept 24, 2026 · 2:30 PM",
+      ip: "192.168.1.1",
+    },
+    {
+      action: "Submitted",
+      description: "Submitted for Accounts Department review",
+      user: "HR Admin",
+      role: "HR Manager",
+      timestamp: "Sept 25, 2026 · 10:45 AM",
+      ip: "192.168.1.1",
+    },
+    {
+      action: "Viewed",
+      description: "Opened payroll record",
+      user: "Accounts Dept",
+      role: "Finance Officer",
+      timestamp: "Sept 25, 2026 · 11:20 AM",
+      ip: "192.168.1.45",
+    },
+  ];
+
+  const formatCurrency = (value) => {
+    return `₦${value.toLocaleString()}`;
+  };
 
   return (
     <>
       <main className="flex-1 p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
+        <div className=" mx-auto">
+          <Breadcrumb periodName={payrollDetails.periodName} />
+
+          <PageHeader
+            periodName={payrollDetails.periodName}
+            status={payrollDetails.status}
+            dateRange={payrollDetails.dateRange}
+          />
+
+          <StatsCards
+            totalEmployees={payrollDetails.totalEmployees}
+            grossPayroll={payrollDetails.grossPayroll}
+            totalDeductions={payrollDetails.totalDeductions}
+            totalNetPay={payrollDetails.totalNetPay}
+            status="Pending Accounts Review"
+            statusDescription="Submitted and awaiting review by Accounts Department"
+          />
+
+          <WorkflowSection
+            preparedBy={payrollDetails.preparedBy}
+            submittedAt={payrollDetails.submittedAt}
+            nextApproval={payrollDetails.nextApproval}
+            lastUpdated={payrollDetails.lastUpdated}
+          />
+
+          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+
+          {activeTab === "Payroll Summary" && (
             <div>
-              <h2 className="text-3xl font-bold text-gray-900">
-                Payroll Overview
-              </h2>
-              <p className="text-gray-900 mt-1">
-                Manage your payroll efficiently and accurately.
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleOpenModal}
-                className="px-6 py-2.5 rounded-lg text-black bg-[#9eceec] font-bold text-sm shadow-sm hover:bg-white/60 transition-colors"
-              >
-                Run Payroll
-              </button>
-            </div>
-          </div>
+              <div className="flex justify-between items-center mb-4">
+                <input
+                  type="text"
+                  placeholder="Search employee..."
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+                />
+                <div className="flex items-center gap-3">
+                  <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option>All Departments</option>
+                    <option>Business Development</option>
+                    <option>Information Technology</option>
+                    <option>Finance & Accounts</option>
+                    <option>Research</option>
+                  </select>
+                  <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
+                    <MdFilterList size={18} />
+                    Filters
+                  </button>
+                </div>
+              </div>
 
-          {/* Run Payroll Modal */}
-          <Modal
-            isOpen={isModalOpen}
-            onClose={handleCloseModal}
-            title="Run Payroll"
-          >
-            <CreatePayroll onSuccess={handleCloseModal} />
-          </Modal>
-
-          {/* Quick Actions */}
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              Quick Actions
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
-              <ActionCard
-                href="/admin-dashboard/hmo"
-                icon={<MdHealthAndSafety size={30} />}
-                label="Hmo Management"
-              />
-               <ActionCard
-                href="/admin-dashboard/payroll/pension"
-                icon={<MdAccountBalance size={30} />}
-                label="Pension"
-              />
-              <ActionCard
-                href="/admin-dashboard/payroll/payee"
-                icon={<MdPerson size={30} />}
-                label="Payee"
-              />
-              <ActionCard
-                href="/admin-dashboard/payroll/itfs"
-                icon={<MdReceiptLong size={30} />}
-                label="ITFS"
-              />
-              <ActionCard
-                href="/admin-dashboard/payroll/generate-Payroll"
-                icon={<MdAddCard size={30} />}
-                label="Generate Payroll for departments"
-              />
-              <ActionCard
-                href="/admin-dashboard/payroll/generate-new"
-                icon={<MdAddCard size={30} />}
-                label="Generate Payroll"
-              />
-              <ActionCard
-                href="/admin-dashboard/payrolls/create-banks/"
-                icon={<MdAccountBalanceWallet size={30} />}
-                label="Generate Payroll for banks"
-              />
-            </div>
-          </div>
-          {/* Recent Payroll Activities */}
-          <div>
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              Recent Payroll Activities
-            </h3>
-            <div className="bg-background-light dark:bg-background-dark rounded-lg border border-[#70c6ff]/20 dark:border-[#70c6ff]/30 overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-[#70c6ff]/5 dark:bg-[#70c6ff]/10">
-                  <tr>
-                    <TableHeader>Date</TableHeader>
-                    <TableHeader>Payroll Name</TableHeader>
-                    <TableHeader>Status</TableHeader>
-                    <TableHeader>Employees</TableHeader>
-                    <TableHeader>Total Amount</TableHeader>
+              <EmployeeTable
+                employees={paginatedEmployees}
+                columns={[
+                  { header: "Employee Name", align: "left" },
+                  { header: "Department", align: "left" },
+                  { header: "Grade", align: "left" },
+                  { header: "Basic Salary", align: "right" },
+                  { header: "Housing Allow.", align: "right" },
+                  { header: "Wardrobe Allow.", align: "right" },
+                  { header: "Transport Allow.", align: "right" },
+                  { header: "Medical Allow.", align: "right" },
+                  { header: "Net Pay", align: "right" },
+                ]}
+                renderRow={(emp, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{emp.name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{emp.department}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{emp.grade}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900 text-right">{emp.basicSalary}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900 text-right">{emp.housingAllow}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900 text-right">{emp.wardrobeAllow}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900 text-right">{emp.transportAllow}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900 text-right">{emp.medicalAllow}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 text-right">{emp.netPay}</td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-[#70c6ff]/20 dark:divide-[#70c6ff]/30">
-                  <PayrollRow
-                    date="2024-07-26"
-                    name="July Payroll"
-                    status="Completed"
-                    employees={15}
-                    amount="$25,000"
-                  />
-                  <PayrollRow
-                    date="2024-07-12"
-                    name="Bi-Weekly Payroll"
-                    status="Completed"
-                    employees={10}
-                    amount="$12,500"
-                  />
-                  <PayrollRow
-                    date="2024-06-28"
-                    name="June Payroll"
-                    status="Completed"
-                    employees={15}
-                    amount="$24,500"
-                  />
-                  <PayrollRow
-                    date="2024-06-14"
-                    name="Bi-Weekly Payroll"
-                    status="Completed"
-                    employees={10}
-                    amount="$12,000"
-                  />
-                  <PayrollRow
-                    date="2024-05-31"
-                    name="May Payroll"
-                    status="Completed"
-                    employees={15}
-                    amount="$24,000"
-                  />
-                </tbody>
-              </table>
+                )}
+              />
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                onPrev={handlePrev}
+                onNext={handleNext}
+                showingText={`Showing ${employees.length > 0 ? startIndex + 1 : 0} to ${endIndex} of ${employees.length} employees`}
+              />
             </div>
-          </div>
+          )}
+
+          {activeTab === "Payroll Breakdown" && (
+            <PayrollBreakdownTab
+              breakdowns={mockBreakdowns}
+              formatCurrency={formatCurrency}
+              totals={{ gross: 18450000, deductions: 2180000, net: 16270000 }}
+            />
+          )}
+
+          {activeTab === "Approval Workflow" && (
+            <ApprovalWorkflowTab steps={mockWorkflow} />
+          )}
+
+          {activeTab === "Audit Trail" && (
+            <AuditTrailTab auditData={mockAuditTrail} />
+          )}
         </div>
       </main>
+
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Run Payroll">
+        <CreatePayroll onSuccess={handleCloseModal} />
+      </Modal>
     </>
   );
 };
