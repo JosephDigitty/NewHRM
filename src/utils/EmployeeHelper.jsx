@@ -272,3 +272,13 @@ export const PayrollPermanentButtons = ({ id }) => {
     </>
   );
 };
+
+export const getEmployee = async (id) => {
+  const response = await api.get(`/employee/${id}`);
+
+  if (!response.data.success) {
+    throw new Error(response.data.error || "Failed to fetch employee");
+  }
+
+  return response.data.employee
+}

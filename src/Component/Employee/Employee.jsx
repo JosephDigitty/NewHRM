@@ -13,7 +13,11 @@ import {
   FaFileImage,
   FaDownload,
   FaPlus,
+  FaTimes,
+  FaUpload,
 } from "react-icons/fa";
+import { getEmployee } from "../../utils/EmployeeHelper";
+import { useAuth } from "../../Context/authContext";
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "N/A";
@@ -28,7 +32,7 @@ const formatDate = (dateStr) => {
 const MOCK_DISCIPLINARY_RECORDS = [
   {
     id: 1,
-    type: "Final Warning - Excessive Lateness",
+    type: "Promotion",
     date: "2025-05-15",
     caseId: "DR-2025-005",
     severity: "High",
@@ -152,26 +156,37 @@ const EmployeeSingular = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("disciplinary");
   const [selectedRecord, setSelectedRecord] = useState(MOCK_DISCIPLINARY_RECORDS[0]);
+  const [showRecordModal, setShowRecordModal] = useState(false);
   const { id } = useParams();
 
+  const [recordForm, setRecordForm] = useState({
+  title: "",
+  type: "",
+  date: "",
+  status: "Open",
+  location: employee?.job?.workLocation || "",
+  description: "",
+  actionTaken: "",
+  employeeResponse: "",
+  });
+
   useEffect(() => {
-    const fetchEmployee = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get(`/employee/${id}`);
-        if (response.data.success) {
-          setEmployeee([response.data.employee]);
+      const fetchEmployee = async () => {
+        setLoading(true);
+
+        try {
+          const employee = await getEmployee(id);
+          setEmployeee([employee]);
+        } catch (error) {
+          showError(
+            error.response?.data?.error ||
+            error.message ||
+            "An error occurred while fetching employee"
+          );
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        if (error.response && !error.response.data.success) {
-          showError(error.response.data.error);
-        } else {
-          showError(error.message || "An error occurred while fetching employee");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
     fetchEmployee();
   }, [id, showError]);
 
@@ -247,7 +262,7 @@ const EmployeeSingular = () => {
                 alt="Profile"
                 className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
                 onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/150";
+                  e.target.src = "";
                 }}
               />
             </div>
@@ -555,15 +570,19 @@ const EmployeeSingular = () => {
           </div>
         </div>
       </div>
+
     </div>
   );
 };
 
 const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, employee }) => {
+  const {id} = useParams()
+  const {user} = useAuth()
+  const userid = user._id
   const [filterType, setFilterType] = useState("All Types");
   const [filterStatus, setFilterStatus] = useState("All Status");
   const [searchQuery, setSearchQuery] = useState("");
-
+  const { showSuccess, showError } = useToastContext();
   const filteredRecords = records.filter((record) => {
     const matchesSearch =
       record.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -575,6 +594,67 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
       filterStatus === "All Status" || record.status === filterStatus;
     return matchesSearch && matchesType && matchesStatus;
   });
+
+    const [showRecordModal, setShowRecordModal] = useState(false);
+
+    const [recordForm, setRecordForm] = useState({
+      title: "",
+      type: "",
+      date: "",
+      status: "Open",
+      location: employee?.job?.workLocation || "",
+      description: "",
+      actionTaken: "",
+      employeeResponse: "",
+    });
+
+    const handleSubmit = async (e) => {
+      e.preventDefault()
+      console.log("Document to upload:", recordForm.document);
+      try {
+        const formData = new FormData();
+        
+      formData.append("title", recordForm.title);
+      formData.append("description", recordForm.description);
+      formData.append("date", recordForm.date);
+      formData.append("type", recordForm.type);
+      formData.append("status", recordForm.status);
+      formData.append("location", recordForm.location);
+      formData.append("actionTaken", recordForm.actionTaken);
+      formData.append("employeeResponse",recordForm.employeeResponse);
+      formData.append("userid", userid);
+
+      if (recordForm.document) {
+        formData.append("document", recordForm.document);
+      }
+
+      const res = await api.post(
+        `/employee/employee-records/${id}`,
+        formData
+      )
+      if (res.data.success) {
+        showSuccess(res.data.message)
+        setShowRecordModal(false)
+        setRecordForm({
+        title: "",
+        description: "",
+        date: "",
+        type: "",
+        status: "Open",
+        location: "",
+        actionTaken: "",
+        employeeResponse: "",
+        document: null,
+      });
+      } else {
+         alert("error alert")
+         console.log(res.data)
+      }
+      } catch (error) {
+        showError(error.response?.data?.error || "Failed to create record");
+      }
+
+    } 
 
   return (
     <div>
@@ -589,9 +669,12 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
             employee related incidents.
           </p>
         </div>
-        <button className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 flex items-center gap-2">
-          <FaPlus size={14} />
-          New Disciplinary Record
+        <button
+        onClick={() => setShowRecordModal(true)}
+        className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 flex items-center gap-2 transition-colors"
+        >
+        <FaPlus size={14} />
+        New Employee Record
         </button>
       </div>
 
@@ -603,11 +686,14 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
           className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 bg-white"
         >
           <option>All Types</option>
-          <option>Final Warning</option>
-          <option>Query</option>
-          <option>First Warning</option>
-          <option>Counselling</option>
-          <option>Verbal Caution</option>
+          <option>Promotion</option>
+            <option>Training</option>
+            <option>Query</option>
+            <option>Misconduct</option>
+            <option>Absence</option>
+            <option>Warning</option>
+            <option>Commendation</option>
+            <option>Other</option>
         </select>
         <select
           value={filterStatus}
@@ -839,6 +925,299 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
           )}
         </div>
       </div>
+      {/* New Employee Record Modal */}
+{showRecordModal && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4"
+    onClick={() => setShowRecordModal(false)}
+  >
+    <div
+      className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Modal Header */}
+      <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-5 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">
+            New Employee Record
+          </h2>
+
+          <p className="text-sm text-slate-500 mt-1">
+            Add a new record to this employee's HR history.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowRecordModal(false)}
+          className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+        >
+          <FaTimes />
+        </button>
+      </div>
+
+      {/* Form */}
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();       // 1. Prevents page reload immediately
+          await handleSubmit(e);
+          setShowRecordModal(false);
+          console.log("New employee record:", recordForm);
+          setRecordForm({
+            title: "",
+            type: "",
+            date: "",
+            status: "Open",
+            location: employee?.job?.workLocation || "",
+            description: "",
+            actionTaken: "",
+            employeeResponse: "",
+          });
+        }}
+        className="p-6"
+      >
+        {/* Employee */}
+        <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+          <p className="text-xs text-slate-500 mb-1">
+            Employee
+          </p>
+
+          <p className="text-sm font-semibold text-slate-900">
+            {employee?.userId?.fullname || "N/A"}
+          </p>
+
+          <p className="text-xs text-slate-500 mt-1">
+            {employee?.employeeId || "N/A"} ·{" "}
+            {employee?.job?.department?.department_Name || "N/A"}
+          </p>
+        </div>
+
+        {/* Row 1 */}
+        <div className="grid grid-cols-2 gap-5 mb-5">
+          {/* Title */}
+          <div className="col-span-2">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Title <span className="text-red-500">*</span>
+            </label>
+
+            <input
+              type="text"
+              value={recordForm.title}
+              onChange={(e) =>
+                setRecordForm({
+                  ...recordForm,
+                  title: e.target.value,
+                })
+              }
+              placeholder="e.g. Promotion to Senior Staff"
+              required
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-500"
+            />
+          </div>
+
+          {/* Type */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Record Type <span className="text-red-500">*</span>
+            </label>
+
+            <select
+              value={recordForm.type}
+              onChange={(e) =>
+                setRecordForm({
+                  ...recordForm,
+                  type: e.target.value,
+                })
+              }
+              required
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-500"
+            >
+              <option value="">Select record type</option>
+              <option value="Promotion">Promotion</option>
+              <option value="Training">Training</option>
+              <option value="Query">Query</option>
+              <option value="Misconduct">Misconduct</option>
+              <option value="Absence">Absence</option>
+              <option value="Warning">Warning</option>
+              <option value="Commendation">Commendation</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          {/* Date */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Date <span className="text-red-500">*</span>
+            </label>
+
+            <input
+              type="date"
+              value={recordForm.date}
+              onChange={(e) =>
+                setRecordForm({
+                  ...recordForm,
+                  date: e.target.value,
+                })
+              }
+              required
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-500"
+            />
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Status
+            </label>
+
+            <select
+              value={recordForm.status}
+              onChange={(e) =>
+                setRecordForm({
+                  ...recordForm,
+                  status: e.target.value,
+                })
+              }
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-500"
+            >
+              <option value="Open">Open</option>
+              <option value="Under Review">Under Review</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
+
+          {/* Location */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Location
+            </label>
+
+            <input
+              type="text"
+              value={recordForm.location}
+              onChange={(e) =>
+                setRecordForm({
+                  ...recordForm,
+                  location: e.target.value,
+                })
+              }
+              placeholder="e.g. Lagos Branch"
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-500"
+            />
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="mb-5">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Description <span className="text-red-500">*</span>
+          </label>
+
+          <textarea
+            rows={4}
+            value={recordForm.description}
+            onChange={(e) =>
+              setRecordForm({
+                ...recordForm,
+                description: e.target.value,
+              })
+            }
+            placeholder="Describe the event, reason or record..."
+            required
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-500"
+          />
+        </div>
+
+        {/* Action Taken */}
+        <div className="mb-5">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Action Taken
+          </label>
+
+          <textarea
+            rows={3}
+            value={recordForm.actionTaken}
+            onChange={(e) =>
+              setRecordForm({
+                ...recordForm,
+                actionTaken: e.target.value,
+              })
+            }
+            placeholder="Describe any action taken..."
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-500"
+          />
+        </div>
+
+        {/* Employee Response */}
+        <div className="mb-5">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Employee Response
+          </label>
+
+          <textarea
+            rows={3}
+            value={recordForm.employeeResponse}
+            onChange={(e) =>
+              setRecordForm({
+                ...recordForm,
+                employeeResponse: e.target.value,
+              })
+            }
+            placeholder="Enter employee's response or explanation..."
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-500"
+          />
+        </div>
+
+        {/* Supporting Documents */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Supporting Documents
+          </label>
+
+          <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-teal-400 transition-colors">
+            <FaUpload className="mx-auto text-slate-400 text-xl mb-2" />
+
+            <p className="text-sm text-slate-600">
+              Upload supporting documents
+            </p>
+
+            <p className="text-xs text-slate-400 mt-1">
+              PDF, DOCX, JPG or PNG
+            </p>
+
+            <input
+              type="file"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setRecordForm({ ...recordForm, document: e.target.files[0] });
+                }
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 pt-5 border-t border-slate-200">
+          <button
+            type="button"
+            onClick={() => setShowRecordModal(false)}
+            className="px-5 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className="px-5 py-2.5 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700"
+          >
+            Save Record
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
     </div>
   );
 };

@@ -7,6 +7,7 @@ import router from "./routes/auth.js";
 import departmentRouter from "./routes/department.js";
 import EmployeeRouter from "./routes/employeeRoutes.js";
 import LeaveRouter from "./routes/leave.js";
+import recordRouter from "./routes/recordRoutes.js";
 import GradeRouter from "./routes/grade.js";
 import payrollRouter from "./routes/payroll.js";
 import hmoRouter from "./routes/hmo.js";
@@ -39,6 +40,7 @@ app.use("/api/employee", statutoryRouter);
 app.use("/api/hmo", hmoRouter);
 app.use("/api/appraisal", appraisalRouter);
 app.use("/api/todo", todoRouter);
+app.use("/api/employee", recordRouter);
 app.use(
   "/uploads",
   express.static(path.join(path.resolve(), "public/uploads"))
