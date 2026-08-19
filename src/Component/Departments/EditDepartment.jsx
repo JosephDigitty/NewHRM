@@ -19,6 +19,7 @@ import {
   Trash2,
   ChevronLeft,
   Lightbulb,
+  User,
 } from "lucide-react";
 
 const EditDepartment = () => {
@@ -31,9 +32,12 @@ const EditDepartment = () => {
     updatedAt: "",
     status: "Active",
     employeeCount: 0,
+    departmentHead: "",
   });
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
   const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
 
@@ -53,6 +57,7 @@ const EditDepartment = () => {
             updatedAt: dept.updatedAt || "May 20, 2025",
             status: dept.status || "Active",
             employeeCount: dept.employeeCount || 0,
+            departmentHead: dept.departmentHead || "",
           });
         }
       } catch (error) {
@@ -66,6 +71,23 @@ const EditDepartment = () => {
     };
     fetchDepartment();
   }, [id, showError]);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      setEmployeesLoading(true);
+      try {
+        const response = await api.get("/employee");
+        if (response.data.success) {
+          setEmployees(response.data.employees || []);
+        }
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+      } finally {
+        setEmployeesLoading(false);
+      }
+    };
+    fetchEmployees();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -103,6 +125,7 @@ const EditDepartment = () => {
     handleEdit({
       department_Name: department.department_Name,
       description: department.description,
+      departmentHead: department.departmentHead,
     });
   };
 
@@ -206,6 +229,34 @@ const EditDepartment = () => {
                   <p className="text-xs text-gray-500 mt-1">
                     Provide a brief description of the department's purpose and
                     responsibilities.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Department Head
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <select
+                      name="departmentHead"
+                      value={department.departmentHead}
+                      onChange={handleChange}
+                      disabled={employeesLoading}
+                      className="pl-10 w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50"
+                    >
+                      <option value="">Select department head</option>
+                      {employees.map((emp) => (
+                        <option key={emp._id} value={emp._id}>
+                          {emp.personal?.fullName || "Unknown"} - {emp.job?.position || "Employee"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Assign a department head to manage this department.
                   </p>
                 </div>
               </form>
