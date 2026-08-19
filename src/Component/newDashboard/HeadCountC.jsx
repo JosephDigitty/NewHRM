@@ -29,9 +29,7 @@ const HeadCountC = () => {
         }))
         setChartData(formatted)
       } catch (error) {
-        if (error.response && !error.response.data.success) {
-          showError(error.response.data.error);
-        }
+        console.error("Failed to load headcount data:", error)
       }
     }
     getAllDashboardData()
@@ -74,7 +72,16 @@ const HeadCountC = () => {
                 const radius = outerRadius + 20;
                 const x = cx + radius * Math.cos(-midAngle * RADIAN);
                 const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                return (
+  if (chartData.length === 0) {
+    return (
+      <div className="bg-white shadow-lg rounded-xl p-6 flex flex-col items-center justify-center h-80">
+        <SubTitle text="Headcount by Dept" />
+        <p className="text-gray-500 text-sm mt-4">No department or employee data available.</p>
+      </div>
+    )
+  }
+
+  return (
                   <text
                     x={x}
                     y={y}

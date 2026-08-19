@@ -8,47 +8,55 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import SubTitle from "../reuseables/SubTitle";
-import { getAllPayroll, getMonthlyPayrollData } from "../../utils/DyamicDashboard";
+import { getMonthlyPayrollData } from "../../utils/DyamicDashboard";
 
-const payrollData = [
-  { name: "Jan", value: 10 },
-  { name: "Feb", value: 5 },
-  { name: "Mar", value: 15 },
-  { name: "Apr", value: 80 },
-  { name: "May", value: 105 },
-  { name: "Jun", value: 100 },
-  { name: "Jul", value: 90 },
-  { name: "Aug", value: 50 },
-  { name: "Sep", value: 80 },
-  { name: "Oct", value: 78 },
-];
+const formatCompact = (value) => {
+  if (value == null || isNaN(value)) return "0";
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(0)}m`;
+  if (abs >= 100_000) return `${(value / 1_000).toFixed(0)}k`;
+  if (abs >= 10_000) return `${(value / 1_000).toFixed(0)}k`;
+  if (abs >= 1_000) return `${(value / 1_000).toFixed(0)}k`;
+  return `${value}`;
+};
 
-const MonthlyPayrollChart = () => {
-  const [payrolls, setPayrolls] = useState([])
+const MonthlyPayrollChart = ({ payrolls }) => {
   const [chartData, setChartData] = useState([])
   useEffect(() => {
   const fetchData = async () => {
-    const payrolls = await getAllPayroll()
-    setPayrolls(payrolls)
-    setChartData(getMonthlyPayrollData(payrolls))
+    const data = payrolls || []
+    setChartData(getMonthlyPayrollData(data))
   }
   fetchData()
-}, [])
-const lastMonthTotal = chartData[chartData.length - 1]?.value || 0
+}, [payrolls])
+
+const lastMonthTotal = chartData.length > 0 ? chartData[chartData.length - 1]?.value : 0
+const currentYear = new Date().getFullYear()
+
+  if (chartData.length === 0) {
+    return (
+      <div className="bg-white shadow-md rounded-xl p-6 flex flex-col items-center justify-center h-80">
+        <SubTitle text="Monthly Payroll Spend"/>
+        <p className="text-gray-500 text-sm mb-4">No payroll data available for {currentYear}</p>
+        <div className="text-gray-400 text-sm">Start by generating payroll to see insights.</div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white shadow-md rounded-xl p-6">
       
       <SubTitle text="Monthly Payroll Spend"/>
-      <p className="text-gray-500 text-sm mb-4">$76.8M paid last month</p>
+      <p className="text-gray-500 text-sm mb-4">₦{lastMonthTotal.toLocaleString()} paid last month</p>
       {/* Chart */}
       <div className="w-full h-64">
         <ResponsiveContainer>
           <BarChart data={chartData}>
             <XAxis dataKey="name" />
             <YAxis
-              tickFormatter={(value) => (value === 0 ? "0" : `${value}M`)}
-              domain={[0, 120]}
-              ticks={[0, 25, 50, 75, 100]}
+              tickFormatter={formatCompact}
+              domain={[0, "auto"]}
+              ticks={chartData.length > 0 ? undefined : [0]}
              
             />
             <Tooltip  formatter={(value) => [`₦${value.toLocaleString()}`, "Payroll"]}/>
