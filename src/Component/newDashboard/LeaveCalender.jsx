@@ -4,23 +4,35 @@ import SubTitle from "../reuseables/SubTitle";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllleave, getEmployeesOnLeaveThisWeek } from "../../utils/DyamicDashboard";
-const LeaveCalender = () => {
-  const [leaves, setLeaves] = useState([])
+const LeaveCalender = ({ leaves }) => {
   const navigate = useNavigate();
- useEffect(() => {
-    const getAllDashboardData = async () => {
+  const [leavesData, setLeavesData] = useState([])
+   useEffect(() => {
+    const fetchLeaves = async () => {
       try {
-        const leave = await getAllleave()
-        setLeaves(leave)
-      } catch (error) {
-        if (error.response && !error.response.data.success) {
-          showError(error.response.data.error);
+        if (leaves && leaves.length > 0) {
+          setLeavesData(leaves)
+        } else {
+          const leave = await getAllleave()
+          setLeavesData(leave || [])
         }
+      } catch (error) {
+        console.error(error)
       }
     }
-    getAllDashboardData()
-  }, [])
-  const onLeaveThisWeek = getEmployeesOnLeaveThisWeek(leaves)
+    fetchLeaves()
+  }, [leaves])
+  const onLeaveThisWeek = getEmployeesOnLeaveThisWeek(leavesData)
+  
+  if (leavesData.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow p-4 col-span-1 flex flex-col items-center justify-center h-80">
+        <SubTitle text={"Leave Calendar"}/>
+        <p className="text-gray-500 text-sm mt-4">No leave records available.</p>
+        <Button icon text="View all Leaves" onClick={() => navigate("/admin-dashboard/leaves/all")} />
+      </div>
+    )
+  }
   return (
     <div className="bg-white rounded-lg shadow p-4 col-span-1 flex flex-col gap-6 items-center  ">
       <div className="flex justify-between flex-col-reverse md:flex-row gap-4  w-full items-start ">
