@@ -41,13 +41,13 @@ const PersonalInfoForm = ({
           placeholder="Enter full name"
           value={formData.fullname}
           onChange={handleChange}
-          inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+          inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
           required
         />
         <select name="gender"
         value={formData.gender}
         onChange={handleChange}
-        className="border px-4 py-2 w-[250px] h-[45px] ml-3 mt-5 rounded-full"
+        className="border border-purple-700 px-4 py-2 w-[250px] h-[45px] ml-3 mt-5 rounded-full"
         >
         <option value="">Select Gender </option>
         <option value="male">Male </option>
@@ -59,7 +59,7 @@ const PersonalInfoForm = ({
           name="dob"
           value={formData.dob}
           onChange={handleChange}
-          inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+          inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
           required
         />
       </div>
@@ -67,7 +67,7 @@ const PersonalInfoForm = ({
        <select name="maritalStatus"
         onChange={handleChange}
         value={formData.maritalStatus}
-        className="border px-4 py-2 w-[190px] h-[45px] mt-5 rounded-full"
+        className="border border-purple-700 px-4 py-2 w-[190px] h-[45px] mt-5 rounded-full"
         >
         <option value="">Marital Status </option>
         <option value="single">Single</option>
@@ -80,7 +80,7 @@ const PersonalInfoForm = ({
           name="password"
           value={formData.password}
           onChange={handleChange}
-          inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+          inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
           required
         />
         <Input
@@ -90,7 +90,7 @@ const PersonalInfoForm = ({
           placeholder="Enter email"
           value={formData.email}
           onChange={handleChange}
-          inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+          inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
           required
         />
 
@@ -100,7 +100,7 @@ const PersonalInfoForm = ({
           placeholder="Enter phone number"
           value={formData.phone}
           onChange={handleChange}
-          inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+          inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
           required
         />
       </div>
@@ -111,7 +111,7 @@ const PersonalInfoForm = ({
         placeholder="Enter home address"
         value={formData.address}
         onChange={handleChange}
-        inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+        inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
       />
 
       <SubTitle text={"Emergency Contact"} textSize={"text-lg"} />
@@ -122,7 +122,7 @@ const PersonalInfoForm = ({
           placeholder="Enter name"
           value={formData.emergencyName}
           onChange={handleChange}
-          inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+          inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
           required
         />
         <Input
@@ -131,7 +131,7 @@ const PersonalInfoForm = ({
           placeholder="e.g. Brother"
           value={formData.emergencyRelationship}
           onChange={handleChange}
-          inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+          inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
           required
         />
         <Input
@@ -140,7 +140,7 @@ const PersonalInfoForm = ({
           placeholder="Enter phone number"
           value={formData.emergencyPhone}
           onChange={handleChange}
-          inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+          inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
           required
         />
       </div>

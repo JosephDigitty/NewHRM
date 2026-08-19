@@ -141,10 +141,12 @@ export const getEmployeePayroll = async (employeeId) => {
         const positive = res.data.success
         if (positive) {
             const pay = res.data.payroll
-            return pay
+            return pay || []
         }
+        return []
     } catch (error) {
         console.log("FULL ERROR:", error)
+        return []
     }
 }
 
@@ -154,10 +156,12 @@ export const getEmployeeAppraisals = async (employeeId) => {
         const positive = res.data.success 
         if(positive) {
             const appraisals = res.data.appraisals
-            return appraisals
+            return appraisals || []
         }
+        return []
     } catch (error) {
         console.log("FULL ERROR:", error)
+        return []
     }
 }
 

@@ -1,9 +1,15 @@
 import axios from "axios";
-import { Eye, HeartPulse, MoreVertical, Pencil,  PlusCircle,   Trash2, X } from "lucide-react";
-import { CiCircleInfo } from "react-icons/ci";
+import { 
+  Eye, 
+  HeartPulse, 
+  MoreVertical, 
+  Pencil,  
+  PlusCircle,   
+  Trash2, 
+  X 
+} from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { MdDelete } from "react-icons/md";
 import Loader from "../Component/reuseables/Loader";
 import { useToastContext } from "../Context/ToastContext";
 import HmoBeneficiary from "../Component/Hmo/HmoBeneficiary";
@@ -12,6 +18,7 @@ import SalaryModifiers from "../Component/Payroll/AddSalaryModifiers";
 import UpdatePermanentSalaryModifiers from "../Component/Payroll/UpdatePermanentModifier";
 import AddPermanentSalaryModifiers from "../Component/Payroll/AddPermSalModifier";
 import { api } from "../api/request";
+import { ActionCell, ActionButton } from "./TableActions";
 
 export const columns = [
   {
@@ -64,8 +71,6 @@ export const Hmocolumns = [
         <HMOButtons id={row._id} />
       ),
   },
-
-
 ];
 
 const formatCurrency = (amount) => {
@@ -145,60 +150,55 @@ export const EmployeeButtons = ({ id, handleDeleted }) => {
     }
   };
   return (
-    <>
-      <div className="flex gap-1 text-white">
-        <button
-          className="py-1 text-black/85 rounded-sm cursor-pointer hover:text-blue-400"
-          onClick={() => Navigate(`/admin-dashboard/employees/${id}`)}
-        >
-          <CiCircleInfo size={30}/>
-        </button>
-        <button
-          className="py-1 flex gap-2 text-black/85 rounded-sm cursor-pointer hover:text-blue-400"
-          onClick={() => Navigate(`/admin-dashboard/edit-employees/${id}`)}
-        >
-          | <Pencil/> |
-        </button>
-        <button
-          className="py-1 flex gap-2 text-black/85 rounded-sm cursor-pointer hover:text-blue-400"
-          onClick={() => setIsHmoModalOpen(true)}
-        >
-          | <HeartPulse/> |
-        </button>
-        <button
-          className="py-1  text-black/85 rounded-sm cursor-pointer hover:text-blue-400 flex items-center gap-1"
-          onClick={handleDelete}
-          disabled={deleting}
-        >
-        <Trash2/>
-        </button>
-      </div>
+    <ActionCell>
+      <ActionButton
+        icon={Eye}
+        title="View"
+        variant="view"
+        onClick={() => Navigate(`/admin-dashboard/employees/${id}`)}
+      />
+      <ActionButton
+        icon={Pencil}
+        title="Edit"
+        variant="edit"
+        onClick={() => Navigate(`/admin-dashboard/edit-employees/${id}`)}
+      />
+      <ActionButton
+        icon={HeartPulse}
+        title="HMO"
+        variant="hmo"
+        onClick={() => setIsHmoModalOpen(true)}
+      />
+      <ActionButton
+        icon={Trash2}
+        title="Delete"
+        variant="delete"
+        onClick={handleDelete}
+        disabled={deleting}
+        loading={deleting}
+      />
       <HmoBeneficiary 
         isOpen={isHmoModalOpen} 
         onClose={() => setIsHmoModalOpen(false)} 
         id={id}
       />
-    </>
+    </ActionCell>
   );
 };
 
 export const HMOButtons = ({ id }) => {
   const Navigate = useNavigate();
   return (
-    <>
-      <div className="flex gap-1 text-white">
-        <button
-          className="py-1 text-black/85 rounded-sm cursor-pointer hover:text-blue-400"
-          onClick={() => Navigate(`/admin-dashboard/hmo/${id}`)}
-        >
-          <CiCircleInfo size={30}/>
-        </button>
-      </div>
-    </>
+    <ActionCell>
+      <ActionButton
+        icon={Eye}
+        title="View"
+        variant="view"
+        onClick={() => Navigate(`/admin-dashboard/hmo/${id}`)}
+      />
+    </ActionCell>
   );
 };
-
-
 
 export const TempoaryPayrollButtons = ({ id }) => {
   const Navigate = useNavigate();
@@ -206,21 +206,19 @@ export const TempoaryPayrollButtons = ({ id }) => {
   const [isAddSalaryModalOpen, setIsAddSalaryModalOpen] = useState(false);
   
   return (
-    <>
-      <div className="flex gap-0.5 text-white">
-        <button
-          className="py-1 text-black/85 rounded-sm cursor-pointer hover:text-blue-400"
-          onClick={() => setIsTemporaryModalOpen(true)}
-        >
-          <Pencil/>
-        </button>
-        <button
-          className="py-1 flex gap-2 text-black/85 rounded-sm cursor-pointer hover:text-blue-400"
-          onClick={() => setIsAddSalaryModalOpen(true)}
-        >
-          | <PlusCircle/>
-        </button>
-      </div>
+    <ActionCell>
+      <ActionButton
+        icon={Pencil}
+        title="Edit"
+        variant="edit"
+        onClick={() => setIsTemporaryModalOpen(true)}
+      />
+      <ActionButton
+        icon={PlusCircle}
+        title="Add"
+        variant="add"
+        onClick={() => setIsAddSalaryModalOpen(true)}
+      />
       
       <UpdateTempoarySalaryModifiers 
         isOpen={isTemporaryModalOpen} 
@@ -233,7 +231,7 @@ export const TempoaryPayrollButtons = ({ id }) => {
         onClose={() => setIsAddSalaryModalOpen(false)} 
         id={id}
       />
-    </>
+    </ActionCell>
   );
 };
 
@@ -242,21 +240,19 @@ export const PayrollPermanentButtons = ({ id }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
   return (
-    <>
-      <div className="flex gap-0.5 text-white">
-        <button
-          className="py-1 text-black/85 rounded-sm cursor-pointer hover:text-blue-400"
-          onClick={() => setIsUpdateModalOpen(true)}
-        >
-          <Pencil/>
-        </button>
-        <button
-          className="py-1 flex gap-2 text-black/85 rounded-sm cursor-pointer hover:text-blue-400"
-          onClick={() => setIsAddModalOpen(true)}
-        >
-          | <PlusCircle/>
-        </button>
-      </div>
+    <ActionCell>
+      <ActionButton
+        icon={Pencil}
+        title="Edit"
+        variant="edit"
+        onClick={() => setIsUpdateModalOpen(true)}
+      />
+      <ActionButton
+        icon={PlusCircle}
+        title="Add"
+        variant="add"
+        onClick={() => setIsAddModalOpen(true)}
+      />
       
       <UpdatePermanentSalaryModifiers 
         isOpen={isUpdateModalOpen} 
@@ -269,16 +265,6 @@ export const PayrollPermanentButtons = ({ id }) => {
         onClose={() => setIsAddModalOpen(false)} 
         id={id}
       />
-    </>
+    </ActionCell>
   );
 };
-
-export const getEmployee = async (id) => {
-  const response = await api.get(`/employee/${id}`);
-
-  if (!response.data.success) {
-    throw new Error(response.data.error || "Failed to fetch employee");
-  }
-
-  return response.data.employee
-}

@@ -5,7 +5,7 @@ const LeaveReport = () => {
 
       <div className="mt-4 space-y-3">
         <Item color="bg-yellow-400" label="Pending" />
-        <Item color="bg-green-500" label="Approved" />
+        <Item color="bg-purple-500" label="Approved" />
         <Item color="bg-red-500" label="Rejected" />
       </div>
     </div>

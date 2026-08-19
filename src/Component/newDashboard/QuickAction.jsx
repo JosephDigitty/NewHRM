@@ -1,19 +1,21 @@
 import Button from "../reuseables/Button";
 import { FaSlidersH } from "react-icons/fa";
 import SubTitle from "../reuseables/SubTitle";
+import { useNavigate } from "react-router-dom";
 
 const QuickAction = () => {
+  const navigate = useNavigate();
   return (
     <div className=" col-span-1">
       <div className="bg-white rounded-lg shadow p-4 mb-6 ">
         <SubTitle text="Quick Actions"/>
         <div className="flex flex-wrap md:gap-x-8 mt-4 gap-x-4 gap-y-4">
-          <Button icon text="Add New Employee" />
-          <Button icon text="Run Payroll" />
-          <Button icon text="Send Payslips" />
-          <Button icon text="Adjust Payroll" />
-          <Button icon text="Approve Leave" />
-          <Button icon text="Generate Report" />
+          <Button icon text="Add New Employee" onClick={() => navigate("/admin-dashboard/add-employee")} />
+          <Button icon text="Run Payroll" onClick={() => navigate("/admin-dashboard/payroll")} />
+          <Button icon text="Send Payslips" onClick={() => navigate("/admin-dashboard/payroll")} />
+          <Button icon text="Adjust Payroll" onClick={() => navigate("/admin-dashboard/payrolls/modifiers/temporary")} />
+          <Button icon text="Approve Leave" onClick={() => navigate("/admin-dashboard/leaves/all")} />
+          <Button icon text="Generate Report" onClick={() => navigate("/admin-dashboard")} />
         </div>
       </div>
 

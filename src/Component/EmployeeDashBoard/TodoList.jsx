@@ -1,32 +1,37 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
 const TodoList = () => {
   const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem("tasks")
-    return saved ? JSON.parse(saved) : []
-  })
-  const [input, setInput] = useState("")
-  const [showInput, setShowInput] = useState(false)
+    const saved = localStorage.getItem("tasks");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [input, setInput] = useState("");
+  const [showInput, setShowInput] = useState(false);
 
   // save to localStorage whenever tasks change
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks))
-  }, [tasks])
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
 
   const addTask = () => {
-    if (!input.trim()) return
-    setTasks([...tasks, { id: Date.now(), text: input.trim(), completed: false }])
-    setInput("")
-    setShowInput(false)
-  }
+    if (!input.trim()) return;
+    setTasks([
+      ...tasks,
+      { id: Date.now(), text: input.trim(), completed: false },
+    ]);
+    setInput("");
+    setShowInput(false);
+  };
 
   const toggleTask = (id) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t))
-  }
+    setTasks(
+      tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
+    );
+  };
 
   const deleteTask = (id) => {
-    setTasks(tasks.filter(t => t.id !== id))
-  }
+    setTasks(tasks.filter((t) => t.id !== id));
+  };
 
   return (
     <div className="bg-white p-4 w-full h-full rounded-xl shadow">
@@ -52,7 +57,7 @@ const TodoList = () => {
           />
           <button
             onClick={addTask}
-            className="bg-green-500 text-white px-3 py-1 rounded text-sm"
+            className="bg-purple-500 text-white px-3 py-1 rounded text-sm"
           >
             Save
           </button>
@@ -87,10 +92,10 @@ const TodoList = () => {
       </div>
 
       <p className="text-xs text-gray-400 mt-4">
-        {tasks.filter(t => t.completed).length}/{tasks.length} completed
+        {tasks.filter((t) => t.completed).length}/{tasks.length} completed
       </p>
     </div>
-  )
-}
+  );
+};
 
-export default TodoList
+export default TodoList;

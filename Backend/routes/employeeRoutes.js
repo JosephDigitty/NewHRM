@@ -1,4 +1,5 @@
 
+
 import express from 'express'
 import authMiddleware from "../middleware/authMiddleware.js"
 import {addEmployee, upload, getAllEmployee, getEmployee, editEmployee, getEmployeesByDepartment} from '../Controllers/employeeContollers.js'

@@ -7,8 +7,8 @@ const PayrollRow = ({ date, name, status, employees, amount }) => (
       {name}
     </td>
     <td className="px-6 py-4 whitespace-nowrap text-sm">
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-        <span className="w-2 h-2 mr-1.5 rounded-full bg-green-800 inline-block"></span>
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+        <span className="w-2 h-2 mr-1.5 rounded-full bg-purple-800 inline-block"></span>
         {status}
       </span>
     </td>
@@ -21,4 +21,4 @@ const PayrollRow = ({ date, name, status, employees, amount }) => (
   </tr>
 );
 
-export default PayrollRow
+export default PayrollRow;

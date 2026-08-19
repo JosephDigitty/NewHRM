@@ -2,9 +2,11 @@ import Button from "../reuseables/Button";
 import { FaCalendarAlt, FaSlidersH } from "react-icons/fa";
 import SubTitle from "../reuseables/SubTitle";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAllleave, getEmployeesOnLeaveThisWeek } from "../../utils/DyamicDashboard";
 const LeaveCalender = () => {
   const [leaves, setLeaves] = useState([])
+  const navigate = useNavigate();
  useEffect(() => {
     const getAllDashboardData = async () => {
       try {
@@ -46,7 +48,7 @@ const LeaveCalender = () => {
         <div>Sun</div>
         {/* Replace with avatars */}
       </div>
-      <Button icon text="View all Leaves" />
+      <Button icon text="View all Leaves" onClick={() => navigate("/admin-dashboard/leaves/all")} />
     </div>
   );
 };

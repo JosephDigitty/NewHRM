@@ -4,10 +4,7 @@ import { columns, DepartmentButtons } from "../../utils/DepartmentHelpers";
 import Loader from "../reuseables/Loader";
 import useToast from "../../utils/useToast";
 import { api } from "../../api/request";
-import {
-  Download,
-  Plus,
-} from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import CustomPagination from "../reuseables/CustomPagination";
 import PageHeader from "../reuseables/PageHeader";
@@ -152,10 +149,10 @@ const DepartmentList = () => {
 
   const totalEmployees = department.reduce(
     (sum, dep) => sum + dep.employeeCount,
-    0
+    0,
   );
   const assignedHeads = department.filter(
-    (dep) => dep.departmentHead !== "Not assigned"
+    (dep) => dep.departmentHead !== "Not assigned",
   ).length;
 
   return (
@@ -209,11 +206,11 @@ const DepartmentList = () => {
             <StatCard
               icon={
                 <div className="flex -space-x-1">
-                  <div className="w-3 h-3 bg-green-600 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                  <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
+                  <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
                 </div>
               }
-              iconBg="bg-green-50"
+              iconBg="bg-purple-50"
               title="Across all departments"
               value={totalEmployees}
             />

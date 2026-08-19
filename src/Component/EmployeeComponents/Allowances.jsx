@@ -66,7 +66,7 @@ export const Allowances = () => {
         {data.map((item) => (
           <div key={item.label} className="flex justify-between">
             <span>{item.label}</span>
-            <span className="text-green-600 font-medium">
+            <span className="text-purple-600 font-medium">
               ₦{item.amount.toLocaleString()}
             </span>
           </div>

@@ -8,30 +8,30 @@ import { api } from "../../api/request";
 import { useToastContext } from "../../Context/ToastContext";
 
 const LeaveDashboard = () => {
-  const {user} = useAuth()
-  const id = user?._id
+  const { user } = useAuth();
+  const id = user?._id;
 
-  const [leaveBalance, setLeaveBalance] = useState([])
-  const { showSuccess, showError } = useToastContext()
+  const [leaveBalance, setLeaveBalance] = useState([]);
+  const { showSuccess, showError } = useToastContext();
 
   useEffect(() => {
-    if(!user) return 
-      const getLeaveBalance = async () => {
-        try {
-          const response = await api.get(`leave/employeebalance/${id}`)
-          if(response.data.success){
-          console.log(response.data.leaveBalances)
-          setLeaveBalance(response.data.leaveBalances)
-          showSuccess(response.data.message)
+    if (!user) return;
+    const getLeaveBalance = async () => {
+      try {
+        const response = await api.get(`leave/employeebalance/${id}`);
+        if (response.data.success) {
+          console.log(response.data.leaveBalances);
+          setLeaveBalance(response.data.leaveBalances);
+          showSuccess(response.data.message);
         }
-        } catch (error) {
-          console.log(error)
-          console.log(`id: ${id}`)
-          showError("Failed to fetch leave balance")
-        }
-    }
-    getLeaveBalance()
-  }, [id])
+      } catch (error) {
+        console.log(error);
+        console.log(`id: ${id}`);
+        showError("Failed to fetch leave balance");
+      }
+    };
+    getLeaveBalance();
+  }, [id]);
 
   return (
     <div className="p-6 space-y-6">
@@ -42,18 +42,18 @@ const LeaveDashboard = () => {
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      {leaveBalance.map((leave) => (
-        <div key={leave._id} >
-          <LeaveCard
-          title={leave.leaveType?.name}
-          used={leave.usedDays}
-          total={leave.totalDays}
-          icon={<Calendar size={20} />}
-          iconBg="bg-green-100"
-          iconColor="text-green-600"
-        />
-        </div>
-      ))}  
+        {leaveBalance.map((leave) => (
+          <div key={leave._id}>
+            <LeaveCard
+              title={leave.leaveType?.name}
+              used={leave.usedDays}
+              total={leave.totalDays}
+              icon={<Calendar size={20} />}
+              iconBg="bg-purple-100"
+              iconColor="text-purple-600"
+            />
+          </div>
+        ))}
       </div>
 
       {/* Recent Activity */}
@@ -88,7 +88,7 @@ const LeaveDashboard = () => {
         <StatRow
           label="Total Remaining"
           value="35 days"
-          color="text-green-600"
+          color="text-purple-600"
         />
 
         <div className="mt-4 bg-blue-200 p-3 rounded-lg font-semibold flex justify-between">
@@ -108,7 +108,7 @@ const LeaveDashboard = () => {
             </p>
             <p className="text-sm text-gray-600">December 23-27, 2024</p>
           </div>
-          <span className="text-green-600 font-medium">5 days</span>
+          <span className="text-purple-600 font-medium">5 days</span>
         </div>
       </div>
     </div>

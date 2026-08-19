@@ -3,7 +3,7 @@ import { ToastProvider } from "./Context/ToastContext";
 import ToastContainer from "./Component/reuseables/ToastContainer";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminSummary from "./Component/AdminSummary";
+
 import Employees from "./Component/Employees";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import Department from "./Component/Departments";
@@ -71,7 +71,7 @@ const App = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/new-dashboard" element={<AdminSummary />} />
+
           <Route path="/login" element={<Login />} />
 
           {/* Appraisal Dashboard Routes */}
@@ -106,7 +106,7 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={["employee"]}>
                 <AppraisalLayout>
-                  <SupervisorAppraisals/>
+                  <SupervisorAppraisals />
                 </AppraisalLayout>
               </ProtectedRoute>
             }
@@ -134,7 +134,7 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={["employee"]}>
                 <AppraisalLayout>
-                  <SupervisorReview/>
+                  <SupervisorReview />
                 </AppraisalLayout>
               </ProtectedRoute>
             }
@@ -159,7 +159,7 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-            <Route
+          <Route
             path="/appraisal-dashboard/appraisal-cycle/:id"
             element={
               <ProtectedRoute allowedRoles={["admin", "HR"]}>
@@ -192,7 +192,9 @@ const App = () => {
           <Route
             path="/appraisal-dashboard/performance-results"
             element={
-              <ProtectedRoute allowedRoles={["employee", "teamlead", "admin", "HR"]}>
+              <ProtectedRoute
+                allowedRoles={["employee", "teamlead", "admin", "HR"]}
+              >
                 <AppraisalLayout>
                   <PerformanceResults />
                 </AppraisalLayout>

@@ -88,7 +88,7 @@ const AddEmployee = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 bg-white p-8 rounded-md shadow-md">
+    <div className=" mt-10 mx-10 bg-white p-8 rounded-md shadow-md">
       <SubTitle text={"Add New Employee"} className={"text-center mb-6"} />
 
       {/* Progress Indicator */}
@@ -108,9 +108,9 @@ const AddEmployee = () => {
                 className={`w-10 h-10 flex items-center justify-center rounded-full border-2 
                   ${
                     isCompleted
-                      ? "bg-green-500 border-green-500 text-white"
+                      ? "bg-purple-700 border-purple-700 text-white"
                       : isActive
-                      ? "border-blue-600 text-blue-600"
+                      ? "border-purple-700 text-purple-700"
                       : "border-gray-300 text-gray-400"
                   }
                 `}
@@ -123,9 +123,9 @@ const AddEmployee = () => {
                 className={`mt-2 text-sm font-medium 
                   ${
                     isActive
-                      ? "text-blue-600"
+                      ? "text-purple-700"
                       : isCompleted
-                      ? "text-green-600"
+                      ? "text-purple-700"
                       : "text-gray-400"
                   }
                 `}
@@ -137,7 +137,7 @@ const AddEmployee = () => {
               {index < steps.length - 1 && (
                 <div
                   className={`absolute top-5 left-1/2 w-full h-[2px] -z-10 
-                    ${isCompleted ? "bg-green-500" : "bg-gray-300"}
+                    ${isCompleted ? "bg-purple-700" : "bg-gray-300"}
                   `}
                 ></div>
               )}
@@ -187,7 +187,7 @@ const AddEmployee = () => {
         <Button
           text={"Cancel"}
           onClick={() => navigate("/admin-dashboard/Employees")}
-          className=" bg-white border"
+          className=" bg-white border order-[var(--purple)]"
         />
 
         <div className="flex gap-4">
@@ -195,17 +195,17 @@ const AddEmployee = () => {
             text={"Back"}
             onClick={prevStep}
             disabled={currentStep === 1}
-            className=" bg-white border border-[var(--blue)] disabled:opacity-50"
+            className=" bg-white border border-[var(--purple)] disabled:opacity-50"
           />
           {currentStep < steps.length ? (
-            <Button text={"Next"} onClick={nextStep} />
+            <Button text={"Next"} onClick={nextStep} className=" bg-[var(--purple)] text-white border border-[var(--purple)] disabled:opacity-50" />
           ) : (
             <Button
               text={loading ? "Adding..." : "Add New Employee"}
               type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className={loading ? "opacity-50 cursor-not-allowed" : ""}
+              className={loading ? "opacity-50 cursor-not-allowed" : " bg-[var(--purple)] text-white border border-[var(--purple)]"}
             />
           )}
         </div>

@@ -36,7 +36,7 @@ const HistoryTable = ({ history }) => {
                 </td>
 
                 <td className="px-6 py-4">
-                  <span className="px-2 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded uppercase">
+                  <span className="px-2 py-1 bg-purple-50 text-purple-600 text-[10px] font-bold rounded uppercase">
                     {item.rating}
                   </span>
                 </td>

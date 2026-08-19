@@ -1,9 +1,7 @@
-
-
 const StatCard = ({ title, value, change, changeType, subtext, link }) => {
   const changeColor =
     changeType === "positive"
-      ? "bg-green-100 text-green-600"
+      ? "bg-purple-100 text-purple-600"
       : "bg-red-100 text-red-600";
 
   return (

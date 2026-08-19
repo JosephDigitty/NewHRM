@@ -14,10 +14,10 @@ import { api } from "../api/request";
 import { useParams } from "react-router-dom";
 
 const SupervisorReview = () => {
-  const {id} = useParams()
+  const { id } = useParams();
   const [formData, setFormData] = useState({
     kpis: [],
-    overallFeedback: ""
+    overallFeedback: "",
   });
   useEffect(() => {
     const getKpiGoal = async () => {
@@ -25,15 +25,15 @@ const SupervisorReview = () => {
         const res = await api.get(`/appraisal/employeeKpis/${id}`);
         if (res.data.success) {
           setFormData({
-          kpis: res.data.appraisals.kpis.map(kpi => ({
-            ...kpi,
-            supervisorScore: kpi.supervisorScore || "",
-            supervisorComment: kpi.supervisorComment || ""
-          })),
-          overallFeedback: res.data.appraisals.overallFinalComment,
-          _id: res.data.appraisals._id
-        });
-          console.log(res.data)
+            kpis: res.data.appraisals.kpis.map((kpi) => ({
+              ...kpi,
+              supervisorScore: kpi.supervisorScore || "",
+              supervisorComment: kpi.supervisorComment || "",
+            })),
+            overallFeedback: res.data.appraisals.overallFinalComment,
+            _id: res.data.appraisals._id,
+          });
+          console.log(res.data);
         } else {
           console.log(res.data);
         }
@@ -44,87 +44,99 @@ const SupervisorReview = () => {
     getKpiGoal();
   }, [id]);
 
-
- 
   const [overallImprovements, setOverallImprovements] = useState(
     "Could improve cross-departmental communication during large scale project planning phases.",
   );
 
   const handleKpiScoreChange = (kpiId, score) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       kpis: prev.kpis.map((kpi) =>
-        kpi._id === kpiId ? { ...kpi, supervisorScore: score } : kpi
-      )
+        kpi._id === kpiId ? { ...kpi, supervisorScore: score } : kpi,
+      ),
     }));
   };
 
   const handleKpiCommentChange = (kpiId, comment) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       kpis: prev.kpis.map((kpi) =>
-        kpi._id === kpiId ? { ...kpi, supervisorComment: comment } : kpi
-      )
+        kpi._id === kpiId ? { ...kpi, supervisorComment: comment } : kpi,
+      ),
     }));
   };
 
-      const handleSubmit = async (e) => {
-      e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-      // Guard: all KPIs must be scored
-      const unscored = formData.kpis.filter(kpi => !kpi.supervisorScore);
-      if (unscored.length > 0) {
-        alert(`Please score all ${unscored.length} remaining KPI(s) before submitting.`);
-        return;
-      }
+    // Guard: all KPIs must be scored
+    const unscored = formData.kpis.filter((kpi) => !kpi.supervisorScore);
+    if (unscored.length > 0) {
+      alert(
+        `Please score all ${unscored.length} remaining KPI(s) before submitting.`,
+      );
+      return;
+    }
 
-      const scores = formData.kpis.map((kpi) => ({
-        kpiId: kpi._id,
-        supervisorScore: Number(kpi.supervisorScore),
-        supervisorComment: kpi.supervisorComment || ""  // 👈 fallback
-      }));
+    const scores = formData.kpis.map((kpi) => ({
+      kpiId: kpi._id,
+      supervisorScore: Number(kpi.supervisorScore),
+      supervisorComment: kpi.supervisorComment || "", // 👈 fallback
+    }));
 
-      const payload = {
-        scores,
-        overallFeedback: formData.overallFeedback,
-        supervisorImprovements: overallImprovements,
-        appraisalId: formData._id,
-      };
-
-      try {
-        const res = await api.post(`/appraisal/supervisorappraisal/${id}`, payload);
-        if (res.data.success) {
-          alert("Operation successful");
-        } else {
-          alert(res.data.message || "Submission failed");
-        }
-      } catch (error) {
-        alert(error);
-      }
+    const payload = {
+      scores,
+      overallFeedback: formData.overallFeedback,
+      supervisorImprovements: overallImprovements,
+      appraisalId: formData._id,
     };
 
+    try {
+      const res = await api.post(
+        `/appraisal/supervisorappraisal/${id}`,
+        payload,
+      );
+      if (res.data.success) {
+        alert("Operation successful");
+      } else {
+        alert(res.data.message || "Submission failed");
+      }
+    } catch (error) {
+      alert(error);
+    }
+  };
+
   const calculateAverageScore = () => {
-    if (!formData.kpis.length) return 0; 
-    const total = formData.kpis.reduce((sum, kpi) => sum + (kpi.supervisorScore || 0), 0);
+    if (!formData.kpis.length) return 0;
+    const total = formData.kpis.reduce(
+      (sum, kpi) => sum + (kpi.supervisorScore || 0),
+      0,
+    );
     return (total / formData.kpis.length).toFixed(1);
   };
   const calculateEmployeeAvgScore = () => {
-  if (!formData.kpis.length) return 0;
-  const total = formData.kpis.reduce((sum, kpi) => sum + (kpi.selfScore || 0), 0);
-  return (total / formData.kpis.length).toFixed(1);
-  }
+    if (!formData.kpis.length) return 0;
+    const total = formData.kpis.reduce(
+      (sum, kpi) => sum + (kpi.selfScore || 0),
+      0,
+    );
+    return (total / formData.kpis.length).toFixed(1);
+  };
 
   const calculateFinalAvgScore = () => {
-  const empAvg = parseFloat(calculateEmployeeAvgScore());
-  const supAvg = parseFloat(calculateSupervisorAvgScore());
-  return ((empAvg + supAvg) / 2).toFixed(1);
-  }
- 
+    const empAvg = parseFloat(calculateEmployeeAvgScore());
+    const supAvg = parseFloat(calculateSupervisorAvgScore());
+    return ((empAvg + supAvg) / 2).toFixed(1);
+  };
+
   const calculateSupervisorAvgScore = () => {
-  if (!formData.kpis.length) return 0;
-  const total = formData.kpis.reduce((sum, kpi) => sum + (kpi.supervisorScore || 0), 0);
-  return (total / formData.kpis.length).toFixed(1);
-}
+    if (!formData.kpis.length) return 0;
+    const total = formData.kpis.reduce(
+      (sum, kpi) => sum + (kpi.supervisorScore || 0),
+      0,
+    );
+    return (total / formData.kpis.length).toFixed(1);
+  };
 
   const getRating = (score) => {
     if (score >= 4.5) return "Outstanding";
@@ -141,7 +153,10 @@ const SupervisorReview = () => {
   const rating = getRating(averageScore);
 
   return (
-    <form onSubmit={handleSubmit} className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light  font-display text-slate-900 antialiased">
+    <form
+      onSubmit={handleSubmit}
+      className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light  font-display text-slate-900 antialiased"
+    >
       <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-6 p-4 md:p-8">
         {/* Employee Summary Info */}
         <div className="flex flex-col gap-6 rounded-xl bg-white p-6 shadow-sm border border-primary/5">
@@ -254,9 +269,7 @@ const SupervisorReview = () => {
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#5048e5]/10 text-[12px] font-bold text-primary">
                       {index + 1}
                     </span>
-                    <h4 className="font-bold text-slate-800 ">
-                      {kpi.title}
-                    </h4>
+                    <h4 className="font-bold text-slate-800 ">{kpi.title}</h4>
                   </div>
                   <p className="text-sm text-slate-500">{kpi.description}</p>
                   <div className="mt-4 rounded-lg bg-slate-50  p-4 border-l-4 border-slate-300">
@@ -280,9 +293,12 @@ const SupervisorReview = () => {
                       <select
                         className="w-full rounded-lg border-primary/20 bg-white text-sm focus:border-primary focus:ring-primary"
                         value={kpi.supervisorScore}
-                        onChange={(e) => {   
-                        const val = e.target.value;
-                        handleKpiScoreChange(kpi._id, val === "" ? "" : parseInt(val));
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          handleKpiScoreChange(
+                            kpi._id,
+                            val === "" ? "" : parseInt(val),
+                          );
                         }}
                       >
                         <option value="">Select Score</option>
@@ -314,7 +330,7 @@ const SupervisorReview = () => {
           ))}
         </div>
         {/* Overall Review Summary */}
-         <div className="rounded-xl bg-white p-6 shadow-sm border border-primary/5">
+        <div className="rounded-xl bg-white p-6 shadow-sm border border-primary/5">
           <h3 className="mb-4 text-lg font-bold">
             Overall Performance Summary
           </h3>
@@ -322,11 +338,9 @@ const SupervisorReview = () => {
             <div className="space-y-4">
               <div>
                 <label className="mb-2 block text-sm font-semibold">
-                  Surbordinate Comments 
+                  Surbordinate Comments
                 </label>
-                <p
-                  className="w-full rounded-lg border-primary/20 bg-white  text-sm focus:border-primary focus:ring-primary"
-                >
+                <p className="w-full rounded-lg border-primary/20 bg-white  text-sm focus:border-primary focus:ring-primary">
                   {formData.overallFeedback}
                 </p>
               </div>
@@ -354,20 +368,24 @@ const SupervisorReview = () => {
             <p className="text-sm font-medium opacity-70">Review Summary</p>
             <div className="flex items-center gap-3">
               <span className="text-2xl font-bold">{rating} Performance</span>
-              <span className="h-2 w-2 rounded-full bg-green-400"></span>
+              <span className="h-2 w-2 rounded-full bg-purple-400"></span>
               <span className="text-lg font-semibold text-primary-200">
                 Score: {averageScore}
               </span>
             </div>
           </div>
           <div className="flex gap-3">
-            <button type="button"
-             className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-white/10 px-6 py-3 text-sm font-bold transition-all hover:bg-white/20 md:flex-none">
+            <button
+              type="button"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-white/10 px-6 py-3 text-sm font-bold transition-all hover:bg-white/20 md:flex-none"
+            >
               <Save className="w-5 h-5" />
               Save Draft
             </button>
-            <button  type="submit"
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#5048e5] px-8 py-3 text-sm font-bold shadow-lg transition-all hover:brightness-110 md:flex-none">
+            <button
+              type="submit"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#5048e5] px-8 py-3 text-sm font-bold shadow-lg transition-all hover:brightness-110 md:flex-none"
+            >
               <CheckCircle2 className="w-5 h-5" />
               Complete Appraisal
             </button>

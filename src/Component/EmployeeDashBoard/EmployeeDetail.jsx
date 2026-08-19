@@ -25,19 +25,19 @@ const EmployeeDashboard = () => {
    const [appraisal, setAppraisal] = useState([])
    const [activeKpi, setActiveKpi] = useState([])
    useEffect(() => {
-    const EmployeeDashboardData = async () => {
-       if (!employeeId || !user) return
+     const EmployeeDashboardData = async () => {
+        if (!employeeId || !user) return
       try {
         const [appraisal, pay ] = await Promise.all([
         getEmployeeAppraisals(employeeId),
         getEmployeePayroll(employeeId)
       ])
-      setPay(pay)
-      setAppraisal(appraisal)
-      const latestAppraised = appraisal.find(
+      setPay(pay || [])
+      setAppraisal(appraisal || [])
+      const latestAppraised = appraisal?.find(
       app => app.status === "Appraised"
       );
-      setActiveKpi(latestAppraised.kpis)
+      setActiveKpi(latestAppraised?.kpis || [])
       } catch (error) {
         console.log("FULL ERROR:", error)
       }
@@ -45,7 +45,7 @@ const EmployeeDashboard = () => {
     EmployeeDashboardData()
   },[employeeId])
 
-  const totalPay = pay.reduce((acc, p) => acc + p.netSalary, 0)
+  const totalPay = (pay || []).reduce((acc, p) => acc + (p.netSalary || 0), 0)
 
 
   

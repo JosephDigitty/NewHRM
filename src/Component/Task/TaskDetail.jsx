@@ -246,7 +246,7 @@ const TaskDetail = () => {
                     </h3>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="flex items-start gap-3 p-3 bg-white dark:bg-[#1a2632] rounded-lg border border-slate-200 dark:border-slate-700">
-                        <div className="mt-0.5 text-green-500">
+                        <div className="mt-0.5 text-purple-500">
                           <ShieldCheck className="w-4 h-4" />
                         </div>
                         <div>
@@ -346,7 +346,7 @@ const TaskDetail = () => {
                         <div
                           className={`absolute -left-[21px] top-1 bg-white dark:bg-[#1a2632] border-2 rounded-full w-3 h-3 ${
                             item.type === "complete"
-                              ? "border-green-500"
+                              ? "border-purple-500"
                               : item.type === "primary"
                                 ? "border-[#70c6ff]"
                                 : "border-slate-300"

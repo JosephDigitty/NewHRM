@@ -1,5 +1,5 @@
 const PerformanceScoreCard = ({ performance }) => {
-  if (!performance) return null
+  if (!performance) return null;
   const { totalScore, rating, status, overallFinalComment } = performance;
 
   return (
@@ -38,7 +38,7 @@ const PerformanceScoreCard = ({ performance }) => {
         <div className="flex flex-wrap items-center gap-3">
           <h3 className="text-2xl font-bold">Overall Performance Score</h3>
 
-          <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+          <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full">
             {rating}
           </span>
 
@@ -54,13 +54,13 @@ const PerformanceScoreCard = ({ performance }) => {
         <div className="pt-2">
           <div className="flex justify-between text-xs font-bold uppercase text-slate-400 mb-2">
             <span>Goal Completion Progress</span>
-            <span>{(totalScore/5) *100}%</span>
+            <span>{(totalScore / 5) * 100}%</span>
           </div>
 
           <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
             <div
               className="h-full bg-[#5048e5] rounded-full"
-              style={{ width: `${(totalScore/5) *100}%` }}
+              style={{ width: `${(totalScore / 5) * 100}%` }}
             />
           </div>
         </div>

@@ -5,7 +5,7 @@ import useToast from "../utils/useToast";
 import { getAllCycles, getAllEmployee } from "../utils/DyamicDashboard";
 
 const statusStyles = {
-  open: "bg-green-100 text-green-700 border-green-200",
+  open: "bg-purple-100 text-purple-700 border-purple-200",
   closed: "bg-red-100 text-red-700 border-red-200",
   Scheduled: "bg-blue-100 text-blue-700 border-blue-200",
   Completed: "bg-slate-100 text-slate-600 border-slate-200",
@@ -56,7 +56,7 @@ const AppraisalCycles = () => {
       if (cycle.status === "closed") acc.closed += 1;
       return acc;
     },
-    { open: 0, closed: 0 }
+    { open: 0, closed: 0 },
   );
 
   // Pagination Logic
@@ -66,7 +66,8 @@ const AppraisalCycles = () => {
   const currentItems = appraisals.slice(indexOfFirstItem, indexOfLastItem);
 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
-  const handleNext = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const handleNext = () =>
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
   if (loading) {
     return (
@@ -96,10 +97,26 @@ const AppraisalCycles = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard title="Open" value={`${totals.open} Cycles`} color="green" />
-          <StatCard title="Closed" value={`${totals.closed} Cycles`} color="blue" />
-          <StatCard title="Total" value={`${cycles.length} Cycles`} color="slate" />
-          <StatCard title="Participants" value={`${employees.length} Employees`} color="indigo" />
+          <StatCard
+            title="Open"
+            value={`${totals.open} Cycles`}
+            color="green"
+          />
+          <StatCard
+            title="Closed"
+            value={`${totals.closed} Cycles`}
+            color="blue"
+          />
+          <StatCard
+            title="Total"
+            value={`${cycles.length} Cycles`}
+            color="slate"
+          />
+          <StatCard
+            title="Participants"
+            value={`${employees.length} Employees`}
+            color="indigo"
+          />
         </div>
 
         {/* Table Container */}
@@ -117,30 +134,46 @@ const AppraisalCycles = () => {
               </thead>
               <tbody className="divide-y">
                 {currentItems.map((cycle, index) => (
-                  <tr key={cycle._id || index} className="hover:bg-slate-50 transition-colors">
+                  <tr
+                    key={cycle._id || index}
+                    className="hover:bg-slate-50 transition-colors"
+                  >
                     <td className="px-6 py-5">
                       <div>
-                        <p className="font-semibold text-slate-900">{cycle.cycleName}</p>
-                        <p className="text-xs text-slate-400">{cycle.des || "No description"}</p>
+                        <p className="font-semibold text-slate-900">
+                          {cycle.cycleName}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {cycle.des || "No description"}
+                        </p>
                       </div>
                     </td>
                     <td className="px-6 py-5 text-sm text-slate-600">
                       {new Date(cycle.startDate).toLocaleDateString("en-GB", {
-                        day: "numeric", month: "short", year: "numeric",
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
                       })}
                     </td>
                     <td className="px-6 py-5 text-sm text-slate-600">
                       {new Date(cycle.endDate).toLocaleDateString("en-GB", {
-                        day: "numeric", month: "short", year: "numeric",
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
                       })}
                     </td>
                     <td className="px-6 py-5">
-                      <span className={`px-3 py-1 text-xs font-bold rounded-full border ${statusStyles[cycle.status] || "bg-gray-100"}`}>
+                      <span
+                        className={`px-3 py-1 text-xs font-bold rounded-full border ${statusStyles[cycle.status] || "bg-gray-100"}`}
+                      >
                         {cycle.status}
                       </span>
                     </td>
                     <td className="px-6 py-5 text-right">
-                      <Link to={`/appraisal-dashboard/appraisal-cycle/${cycle._id}`} className="text-indigo-600 font-semibold hover:underline">
+                      <Link
+                        to={`/appraisal-dashboard/appraisal-cycle/${cycle._id}`}
+                        className="text-indigo-600 font-semibold hover:underline"
+                      >
                         Edit
                       </Link>
                     </td>
@@ -153,7 +186,10 @@ const AppraisalCycles = () => {
           {/* Pagination UI */}
           <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t gap-4">
             <p className="text-sm text-slate-500">
-              Showing <b>{appraisals.length === 0 ? 0 : indexOfFirstItem + 1}</b> to <b>{Math.min(indexOfLastItem, appraisals.length)}</b> of <b>{appraisals.length}</b> cycles
+              Showing{" "}
+              <b>{appraisals.length === 0 ? 0 : indexOfFirstItem + 1}</b> to{" "}
+              <b>{Math.min(indexOfLastItem, appraisals.length)}</b> of{" "}
+              <b>{appraisals.length}</b> cycles
             </p>
 
             <div className="flex gap-2">
@@ -165,15 +201,17 @@ const AppraisalCycles = () => {
                 Prev
               </button>
 
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${currentPage === page ? "bg-indigo-600 text-white" : "bg-white text-slate-700 border hover:bg-slate-50"}`}
-                >
-                  {page}
-                </button>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${currentPage === page ? "bg-indigo-600 text-white" : "bg-white text-slate-700 border hover:bg-slate-50"}`}
+                  >
+                    {page}
+                  </button>
+                ),
+              )}
 
               <button
                 onClick={handleNext}

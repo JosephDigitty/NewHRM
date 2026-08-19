@@ -37,7 +37,7 @@ const JobPayrollForm = ({ data = {}, onUpdate, grades = [], departments = [] }) 
           name="role"
           value={formData.role}
           onChange={handleChange}
-          className="border px-2 py-1 w-[200px] h-[36px] mt-7 rounded-full text-sm"
+          className="border border-purple-700 px-2 py-1 w-[200px] h-[36px] mt-7 rounded-full text-sm"
         >
           <option value="">Select Role</option>
           <option value="employee">Employee</option>
@@ -50,14 +50,14 @@ const JobPayrollForm = ({ data = {}, onUpdate, grades = [], departments = [] }) 
             label="Date of Hire"
             value={formData.dateOfHire}
             onChange={handleChange}
-            inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+            inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
           />
         </div>
         <select
           name="employmentType"
           value={formData.employmentType}
           onChange={handleChange}
-          className="border px-2 py-1 w-[400px] h-[36px] mt-7 rounded-full text-sm"
+          className="border border-purple-700 px-2 py-1 w-[400px] h-[36px] mt-7 rounded-full text-sm"
         >
           <option value="">Employment Type</option>
           <option value="Full-time">Full Time</option>
@@ -75,14 +75,14 @@ const JobPayrollForm = ({ data = {}, onUpdate, grades = [], departments = [] }) 
           placeholder="Enter position"
           value={formData.position}
           onChange={handleChange}
-          inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+          inputClassName="border border-purple-700  px-4 py-2 mt-1 w-full rounded-full"
         />
 
         <select
           name="department"
           value={formData.department}
           onChange={handleChange}
-          className="border px-2 py-1 w-[200px] h-[36px] mt-7 rounded-full text-sm"
+          className="border border-purple-700 px-2 py-1 w-[200px] h-[36px] mt-7 rounded-full text-sm"
         >
           <option value="">Select Department</option>
           {departments.map((dep) => (
@@ -99,7 +99,7 @@ const JobPayrollForm = ({ data = {}, onUpdate, grades = [], departments = [] }) 
           placeholder="Enter manager name"
           value={formData.reportingTo}
           onChange={handleChange}
-          inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+          inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
         />
 
         <Input
@@ -109,7 +109,7 @@ const JobPayrollForm = ({ data = {}, onUpdate, grades = [], departments = [] }) 
           placeholder="Morning, Night, etc."
           value={formData.workShift}
           onChange={handleChange}
-          inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+          inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
         />
       </div>
 
@@ -120,7 +120,7 @@ const JobPayrollForm = ({ data = {}, onUpdate, grades = [], departments = [] }) 
         placeholder="Enter location"
         value={formData.workLocation}
         onChange={handleChange}
-        inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+        inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -131,7 +131,7 @@ const JobPayrollForm = ({ data = {}, onUpdate, grades = [], departments = [] }) 
           placeholder="Enter bank name"
           value={formData.bankName}
           onChange={handleChange}
-          inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+          inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
         />
 
         <Input
@@ -141,14 +141,14 @@ const JobPayrollForm = ({ data = {}, onUpdate, grades = [], departments = [] }) 
           placeholder="Enter account number"
           value={formData.bankAccountNumber}
           onChange={handleChange}
-          inputClassName="border px-4 py-2 mt-1 w-full rounded-full"
+          inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
         />
 
         <select
           name="grade"
           value={formData.grade}
           onChange={handleChange}
-          className="border px-2 py-1 w-[220px] h-[42px] mt-5 rounded-full text-sm"
+          className="border border-purple-700 px-2 py-1 w-[220px] h-[42px] mt-5 rounded-full text-sm"
         >
           <option value="">Select Grade</option>
           {grades.map((grd) => (

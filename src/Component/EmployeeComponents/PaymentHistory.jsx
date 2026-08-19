@@ -8,7 +8,7 @@ const PaymentHistory = ({ period, sub, gross, net, status, date }) => (
     </td>
     <td className="p-4">{gross}</td>
     <td className="p-4">{net}</td>
-    <td className="p-4 text-green-600 font-medium">{status}</td>
+    <td className="p-4 text-purple-600 font-medium">{status}</td>
     <td className="p-4">{date}</td>
     <td className="p-4">
       <button className="px-4 py-2 border rounded-md hover:bg-gray-100 flex items-center gap-2">

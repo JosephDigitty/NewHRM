@@ -23,7 +23,7 @@ const SalaryOverview = () => {
     setLoading(false);
     const fetchPayroll = async () => {
       try {
-        const res = await api.get( `/employee/payroll/${id}`, );
+        const res = await api.get(`/employee/payroll/${id}`);
         if (res.data.success) {
           setPayroll(res.data.payroll);
 
@@ -48,12 +48,12 @@ const SalaryOverview = () => {
   const lastDayCurrentMonth = new Date(
     new Date().getFullYear(),
     new Date().getMonth() + 1,
-    0
+    0,
   );
   const lastDayPreviousMonth = new Date(
     new Date().getFullYear(),
     new Date().getMonth(),
-    0
+    0,
   );
   const lastPayrollIndex = payroll?.length - 1;
   const ded1 = payroll[lastPayrollIndex]?.monthlyPAYE;
@@ -92,10 +92,10 @@ const SalaryOverview = () => {
           title="Next pay date"
           value={lastDayCurrentMonth.toLocaleDateString("en-US")}
           subtitle={`Last Paid: ${lastDayPreviousMonth.toLocaleDateString(
-            "en-US"
+            "en-US",
           )}`}
-          iconBg="bg-green-100"
-          iconColor="text-green-600"
+          iconBg="bg-purple-100"
+          iconColor="text-purple-600"
         />
       </div>
       <Allowances />

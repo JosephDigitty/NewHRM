@@ -1,5 +1,10 @@
 import React from "react";
-import { MdPerson, MdAccountBalanceWallet, MdReceiptLong, MdAccountBalance } from "react-icons/md";
+import {
+  MdPerson,
+  MdAccountBalanceWallet,
+  MdReceiptLong,
+  MdAccountBalance,
+} from "react-icons/md";
 
 const StatCard = ({ icon, title, value, subtitle }) => (
   <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -14,7 +19,14 @@ const StatCard = ({ icon, title, value, subtitle }) => (
   </div>
 );
 
-const StatsCards = ({ totalEmployees, grossPayroll, totalDeductions, totalNetPay, status, statusDescription }) => {
+const StatsCards = ({
+  totalEmployees,
+  grossPayroll,
+  totalDeductions,
+  totalNetPay,
+  status,
+  statusDescription,
+}) => {
   const formatCurrency = (value) => `₦${value.toLocaleString()}`;
 
   return (
@@ -26,7 +38,7 @@ const StatsCards = ({ totalEmployees, grossPayroll, totalDeductions, totalNetPay
         subtitle="Employees in payroll"
       />
       <StatCard
-        icon={<MdAccountBalanceWallet className="text-green-600" size={24} />}
+        icon={<MdAccountBalanceWallet className="text-purple-600" size={24} />}
         title="Gross Payroll"
         value={formatCurrency(grossPayroll)}
         subtitle="Total earnings"
@@ -44,7 +56,9 @@ const StatsCards = ({ totalEmployees, grossPayroll, totalDeductions, totalNetPay
         subtitle="Total take home pay"
       />
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-sm font-medium text-gray-600 mb-3">Current Status</h3>
+        <h3 className="text-sm font-medium text-gray-600 mb-3">
+          Current Status
+        </h3>
         <div className="flex items-center gap-2 mb-1">
           <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
           <span className="text-gray-900 font-medium text-sm">{status}</span>

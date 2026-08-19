@@ -17,16 +17,13 @@ export const SalaryCalculation = () => {
     setLoading(false);
     const fetchPayroll = async () => {
       try {
-        const res = await api.get(
-          `/employee/payroll/${id}`,
-        );
+        const res = await api.get(`/employee/payroll/${id}`);
         if (res.data.success) {
           setPayroll(res.data.payroll);
         }
       } catch (error) {
         if (error.response && !error.response.data.success) {
           showError(error.response.data.error);
-        
         }
       } finally {
         setLoading(false);
@@ -55,7 +52,7 @@ export const SalaryCalculation = () => {
         <span className="font-medium">₦ {BaseSalary.toLocaleString()}</span>
       </div>
 
-      <div className="text-green-600 flex justify-between mb-2">
+      <div className="text-purple-600 flex justify-between mb-2">
         <span>+ Total Allowances</span>
         <span>₦ {totalAllowance.toLocaleString()}</span>
       </div>
@@ -74,7 +71,7 @@ export const SalaryCalculation = () => {
 
       <div className="mt-4 bg-blue-100 p-3 rounded-lg font-semibold flex justify-between">
         <span>Net pay</span>
-        <span className="text-green-600">₦ {netSalary.toLocaleString()}</span>
+        <span className="text-purple-600">₦ {netSalary.toLocaleString()}</span>
       </div>
     </div>
   );
