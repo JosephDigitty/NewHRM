@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useToast from "../../utils/useToast";
 import Loader from "../reuseables/Loader";
@@ -12,22 +12,43 @@ import {
   BarChart3,
   Lock,
   Handshake,
+  User,
 } from "lucide-react";
 
 const AddDepartment = () => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
 
   const [department, setDepartment] = useState({
     department_Name: "",
     description: "",
+    departmentHead: "",
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setDepartment({ ...department, [name]: value });
   };
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      setEmployeesLoading(true);
+      try {
+        const response = await api.get("/employee");
+        if (response.data.success) {
+          setEmployees(response.data.employees || []);
+        }
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+      } finally {
+        setEmployeesLoading(false);
+      }
+    };
+    fetchEmployees();
+  }, []);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -125,6 +146,34 @@ const AddDepartment = () => {
                   <p className="text-xs text-gray-500 mt-1">
                     Provide a brief description of the department's purpose and
                     responsibilities.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Department Head
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <select
+                      name="departmentHead"
+                      value={department.departmentHead}
+                      onChange={handleChange}
+                      disabled={employeesLoading}
+                      className="pl-10 w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50"
+                    >
+                      <option value="">Select department head</option>
+                      {employees.map((emp) => (
+                        <option key={emp._id} value={emp._id}>
+                          {emp.personal?.fullName || "Unknown"} - {emp.job?.position || "Employee"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Assign a department head to manage this department.
                   </p>
                 </div>
 

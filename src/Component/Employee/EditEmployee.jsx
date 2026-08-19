@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchDepartments, getHmo } from "../../utils/EmployeeHelper";
-import axios from "axios";
+
 import { useNavigate, useParams } from "react-router-dom";
 import Loader from "../reuseables/Loader";
 import { api } from "../../api/request";
