@@ -13,7 +13,7 @@ const PersonalInfoForm = ({
     dob: "",
     gender: "",
     maritalStatus: "",
-    password: "",
+    authorization: "",
     address: "",
     emergencyName: "",
     emergencyRelationship: "",
@@ -74,15 +74,16 @@ const PersonalInfoForm = ({
         <option value="married">Married </option>
         <option value="divorced">Divorced </option>
         </select>
-        <Input
-          type="password"
-          label="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          inputClassName="border border-purple-700 px-4 py-2 mt-1 w-full rounded-full"
-          required
-        />
+        <select name="authorisation"
+        onChange={handleChange}
+        value={formData.authorisation}
+        className="border border-purple-700 items-center px-4 py-2 w-[350px] h-[45px] mt-5 rounded-full"
+        >
+        <option value="">Authorization</option>
+        <option value="Account">Account/Finance</option>
+        <option value="Administrator">Administrator</option>
+        <option value="Director's Office">Director's Office</option>
+        </select>
         <Input
           label="Email Address"
           type="email"

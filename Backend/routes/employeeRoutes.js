@@ -2,7 +2,8 @@
 
 import express from 'express'
 import authMiddleware from "../middleware/authMiddleware.js"
-import {addEmployee, upload, getAllEmployee, getEmployee, editEmployee, getEmployeesByDepartment} from '../Controllers/employeeContollers.js'
+import {addEmployee, getAllEmployee, getEmployee, editEmployee, getEmployeesByDepartment} from '../Controllers/employeeContollers.js'
+import { upload } from '../db/Cloudinary.js';
 const router = express.Router()
 
 router.post(

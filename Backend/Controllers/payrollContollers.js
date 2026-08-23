@@ -5,12 +5,18 @@ import ITF from "../model/ITF.js"
 import NSITF from "../model/NSITF.js"
 import HmoDeductions from "../model/HmoDeductions.js"
 import Employee from "../model/Employee.js"
+import payrollBatch from "../model/PayrollBatch.js"
+import User from "../model/user.js"
 
-const upsertPayroll =  async (req, res) => {
+const upsertPayroll = async (req, res) => {
     try {
         console.log("payload recieve", req.body)
-        const {id: employeeId, allowances, deductions, period} = req.body
-        //To Determine the period name
+        const { id: employeeId, allowances, deductions, period } = req.body
+
+        if (!period || !employeeId) {
+            return res.status(400).json({ success: false, error: "Employee Id and period are required" })
+        }
+
         const [year, month] = period.split("-")
         const date = new Date(`${year}-${month}-01`)
         const monthName = date.toLocaleString("default", { month: "short" })
@@ -19,41 +25,50 @@ const upsertPayroll =  async (req, res) => {
         const payrollperiodName = `${monthName} ${year} Payroll`
         const ITFperiodName = `${monthName} ${year} ITF`
         const NSITFperiodName = `${monthName} ${year} NSITF`
-        const thisMonth = new Date().toISOString().slice(0,7)
-        const sentMonth = new Date(period + "-01")
-        const inThisMonth = new Date(thisMonth + "-01")
-        // if (sentMonth > inThisMonth) {
-        //      return res.status(400).json({success:false, error: "Cant modify payroll of future month"})
-        // }
-        if(!period && !employeeId) {
-            return res.status(400).json({success:false, error: "Employee Id and Padate is required"})
+
+        // ---- Find the batch for this period (does NOT create one) ----
+        const batch = await payrollBatch.findOne({ period })
+        if (!batch) {
+            return res.status(404).json({
+                success: false,
+                error: `No payroll batch exists for ${period} yet. Run payroll sync for this period first.`,
+            })
         }
+
+        // ---- Lock check: only editable-state batches can be modified ----
+        const editableStatuses = ["Draft", "RejectedByAccounts", "RejectedByMD"]
+        if (!editableStatuses.includes(batch.status)) {
+            return res.status(403).json({
+                success: false,
+                error: `Payroll for ${payrollperiodName} is in "${batch.status}" status and cannot be modified`,
+            })
+        }
+
         const employee = await Employee.findById(employeeId).populate("job.grade").populate("hmo")
-        if(!employee){
-             return res.status(404).json({success:false, error: "Employee not found"})
+        if (!employee) {
+            return res.status(404).json({ success: false, error: "Employee not found" })
         }
+
         const basicSalary = employee.job.grade.basicSalary
-        const housingAllowance= employee.job.grade.housingAllowance || 0
+        const housingAllowance = employee.job.grade.housingAllowance || 0
         const wardrobeAllowance = employee.job.grade.wardrobeAllowance || 0
         const transportAllowance = employee.job.grade.transportAllowance || 0
         const medicalAllowance = employee.job.grade.medicalAllowance || 0
-
         const totalRecurringAllowance = housingAllowance + wardrobeAllowance + transportAllowance + medicalAllowance
-
         const permAllowances = employee.salaryModifiers.allowances
         const permDeductions = employee.salaryModifiers.deductions
         const beneficiary = employee.beneficiary || []
-        const hmo = employee.hmo?.amount || 1
+        const hmo = employee.hmo?.amount || 0
         const hmoAmount = beneficiary.length * hmo
-        let totalPermAllownaces = 0 
-        for(let i = 0; i < permAllowances.length; i++) {
+        let totalPermAllownaces = 0
+        for (let i = 0; i < permAllowances.length; i++) {
             totalPermAllownaces += permAllowances[i].amount || 0
         }
 
-        let totalPermDeductions = 0 
-        for(let i = 0; i < permDeductions.length; i++) {
+        let totalPermDeductions = 0
+        for (let i = 0; i < permDeductions.length; i++) {
             totalPermDeductions += permDeductions[i].amount || 0
-        }     
+        }
         let totalOneTimeAllowances = 0;
         for (let i = 0; i < allowances.length; i++) {
             totalOneTimeAllowances += allowances[i].amount || 0;
@@ -63,69 +78,72 @@ const upsertPayroll =  async (req, res) => {
         for (let i = 0; i < deductions.length; i++) {
             totalOneTimeDeduction += deductions[i].amount || 0;
         }
-        // Paye & Pension Computaion 
-        // step 1 - Calculate Gross Pay 
+
+        // ---- PAYE & Pension computation (Nigeria Tax Act 2025, effective Jan 2026) ----
+        // Step 1 - Gross pay
         const grossPay = basicSalary + totalRecurringAllowance
         const annualGrossPay = grossPay * 12
+
+        // Step 2 - Pension (basis unchanged: basic + housing + transport, 8%)
         const pensionPay = basicSalary + housingAllowance + transportAllowance
         const pensionPerMonth = pensionPay * 0.08
         const annualPension = pensionPerMonth * 12
-        const pensionGross = annualGrossPay - annualPension
-        const CRA = Math.max(200000, 0.01 * pensionGross) + (0.20 * pensionGross);
-        const taxRelief = CRA + annualPension;
-        const taxableIncome = annualGrossPay - taxRelief
-        //computation of ITFs
+
+        // Step 3 - Taxable income: CRA abolished, only pension deducted (rent relief excluded)
+        const taxableIncome = annualGrossPay - annualPension
+
+        // Step 4 - ITF (unchanged)
         const ITFamount = grossPay * 0.01
-        //computation of PAYE
+
+        // Step 5 - PAYE using new 2026 bands
         let remaining = taxableIncome;
         let PAYE = 0;
-        if (remaining > 0) {
-        const band1 = Math.min(300000, remaining);
-        PAYE += band1 * 0.07;
-        remaining -= band1;
-        }
-        if (remaining > 0) {
-        const band2 = Math.min(300000, remaining);
-        PAYE += band2 * 0.11;
-        remaining -= band2;
-        }
 
         if (remaining > 0) {
-        const band3 = Math.min(500000, remaining);
-        PAYE += band3 * 0.15;
-        remaining -= band3;
+            const band1 = Math.min(800000, remaining);       // 0% up to ₦800k
+            PAYE += band1 * 0;
+            remaining -= band1;
         }
-
         if (remaining > 0) {
-        const band4 = Math.min(500000, remaining);
-        PAYE += band4 * 0.19;
-        remaining -= band4;
+            const band2 = Math.min(2200000, remaining);      // ₦800k - ₦3m @ 15%
+            PAYE += band2 * 0.15;
+            remaining -= band2;
         }
-
         if (remaining > 0) {
-        const band5 = Math.min(1600000, remaining);
-        PAYE += band5 * 0.21;
-        remaining -= band5;
+            const band3 = Math.min(9000000, remaining);      // ₦3m - ₦12m @ 18%
+            PAYE += band3 * 0.18;
+            remaining -= band3;
         }
-
         if (remaining > 0) {
-        PAYE += remaining * 0.24;
+            const band4 = Math.min(13000000, remaining);     // ₦12m - ₦25m @ 21%
+            PAYE += band4 * 0.21;
+            remaining -= band4;
+        }
+        if (remaining > 0) {
+            const band5 = Math.min(25000000, remaining);     // ₦25m - ₦50m @ 23%
+            PAYE += band5 * 0.23;
+            remaining -= band5;
+        }
+        if (remaining > 0) {
+            PAYE += remaining * 0.25;                          // above ₦50m @ 25%
         }
 
-        const minimumTax = 0.01 * pensionGross;
-        PAYE = Math.max(PAYE, minimumTax);
+        // No minimum tax floor under new law
         const monthlyPAYE = PAYE / 12;
 
         const totalEarnings = basicSalary + totalRecurringAllowance + totalOneTimeAllowances + totalPermAllownaces
-        const totalDeductions = totalOneTimeDeduction + totalPermDeductions 
+        const totalDeductions = totalOneTimeDeduction + totalPermDeductions
         const netSalary = totalEarnings - totalDeductions - monthlyPAYE - pensionPerMonth - hmoAmount
 
         let payroll = await Payroll.findOne({ employeeId, period });
 
         if (!payroll) {
-             payroll = new Payroll({
+            payroll = new Payroll({
                 employeeId,
+                batchId: batch._id,
                 period,
+                payDate: date,
+                status: batch.status,
                 basicSalary,
                 housingAllowance,
                 wardrobeAllowance,
@@ -133,8 +151,8 @@ const upsertPayroll =  async (req, res) => {
                 medicalAllowance,
                 permAllowances,
                 permDeductions,
-                oneTimeallowances: allowances,
-                oneTimedeductions: deductions,
+                oneTimeAllowances: allowances,
+                oneTimeDeductions: deductions,
                 totalEarnings,
                 totalDeductions,
                 netSalary,
@@ -142,11 +160,8 @@ const upsertPayroll =  async (req, res) => {
                 monthlyPAYE,
                 pensionPerMonth
             });
-           
-        } 
-        if (payroll && payroll.status === "Draft" || "Finanlized"){
-            payroll.period = period;
-            payroll.payDate = period;
+        } else {
+            payroll.batchId = batch._id;
             payroll.basicSalary = basicSalary;
             payroll.housingAllowance = housingAllowance;
             payroll.wardrobeAllowance = wardrobeAllowance;
@@ -162,75 +177,63 @@ const upsertPayroll =  async (req, res) => {
             payroll.payrollperiodName = payrollperiodName;
             payroll.monthlyPAYE = monthlyPAYE;
             payroll.pensionPerMonth = pensionPerMonth;
-            
-        } else {
-            return res.status(500).json({success:true, error: "Payroll for this employee cannot be modified"})
+            payroll.status = batch.status;
         }
+
         await payroll.save();
 
-         let payee = await PAYEE.findOne({ employeeId, period });
-            if(!payee) {
-                payee = new PAYEE({
-                    employeeId,
-                    payrollId: payroll._id,
-                    period,
-                    name: payeePeriodName,
-                    amount: monthlyPAYE
-                    })
-                } 
-                await payee.save()
-        let HMO = await HmoDeductions.findOne({ employeeId, period });
-            if(!HMO) {
-                HMO = new HmoDeductions({
-                    employeeId,
-                    payrollId: payroll._id,
-                    period,
-                    name: payeePeriodName,
-                    amount: hmoAmount
-                    })
-                } 
-                await HMO.save()
-
-                let pension = await Pension.findOne({ employeeId, period });
-
-                if(!pension) {
-                pension = new Pension({
-                    employeeId,
-                    payrollId: payroll._id,
-                    period,
-                    name: pensionPeriodName,
-                    amount: pensionPerMonth
-                    })
-                } 
-                await pension.save()
-
-        let ITFs = await ITF.findOne({employeeId, period})
-
-        if(!ITFs) {
-            ITFs = new ITF({
-                employeeId,
-                payrollId: payroll._id,
-                period,
-                name: ITFperiodName,
-                amount: ITFamount
-            })
+        let payee = await PAYEE.findOne({ employeeId, period });
+        if (!payee) {
+            payee = new PAYEE({ employeeId, payrollId: payroll._id, period, name: payeePeriodName, amount: monthlyPAYE })
+        } else {
+            payee.amount = monthlyPAYE
         }
+        await payee.save()
 
+        let HMO = await HmoDeductions.findOne({ employeeId, period });
+        if (!HMO) {
+            HMO = new HmoDeductions({ employeeId, payrollId: payroll._id, period, name: payeePeriodName, amount: hmoAmount })
+        } else {
+            HMO.amount = hmoAmount
+        }
+        await HMO.save()
+
+        let pension = await Pension.findOne({ employeeId, period });
+        if (!pension) {
+            pension = new Pension({ employeeId, payrollId: payroll._id, period, name: pensionPeriodName, amount: pensionPerMonth })
+        } else {
+            pension.amount = pensionPerMonth
+        }
+        await pension.save()
+
+        let ITFs = await ITF.findOne({ employeeId, period })
+        if (!ITFs) {
+            ITFs = new ITF({ employeeId, payrollId: payroll._id, period, name: ITFperiodName, amount: ITFamount })
+        } else {
+            ITFs.amount = ITFamount
+        }
         await ITFs.save()
 
-         let NSITFs = await NSITF.findOne({employeeId, period})
-
-        if(!NSITFs) {
-            NSITFs = new NSITF({
-                employeeId,
-                payrollId: payroll._id,
-                period,
-                name: ITFperiodName,
-                amount: ITFamount
-            })
+        let NSITFs = await NSITF.findOne({ employeeId, period })
+        if (!NSITFs) {
+            NSITFs = new NSITF({ employeeId, payrollId: payroll._id, period, name: NSITFperiodName, amount: ITFamount })
+        } else {
+            NSITFs.amount = ITFamount
         }
-
         await NSITFs.save()
+
+        // ---- Refresh batch totals to reflect this one-time change ----
+        const allPayrollsInBatch = await Payroll.find({ batchId: batch._id })
+        const totals = allPayrollsInBatch.reduce((acc, p) => {
+            acc.totalEmployees += 1;
+            acc.grossPayroll += p.totalEarnings;
+            acc.totalDeductions += p.totalDeductions;
+            acc.totalNetPay += p.netSalary;
+            return acc;
+        }, { totalEmployees: 0, grossPayroll: 0, totalDeductions: 0, totalNetPay: 0 });
+
+        batch.totals = totals;
+        await batch.save();
 
         return res.status(200).json({ success: true, payroll });
     } catch (error) {
@@ -238,40 +241,62 @@ const upsertPayroll =  async (req, res) => {
         return res.status(500).json({ success: false, error: "Error adding Payroll" });
     }
 }
+
 const syncPayrollsForPeriod = async (req, res) => {
     try {
-        console.log("Payload recieved", req.body)
-        const { payDate } = req.body;
-       
-        
-        const [year, month] = payDate.split("-")
-        const date = new Date(`${year}-${month}-01`)
-        const monthName = date.toLocaleString("default", { month: "short" })
-        const payeePeriodName = `${monthName} ${year} PAYE`
-        const pensionPeriodName =  `${monthName} ${year} Pension`
-        const ITFperiodName = `${monthName} ${year} ITF`
-        const NSITFperiodName = `${monthName} ${year} NSITF`
-        const payrollperiodName = `${monthName} ${year} Payroll`
+        console.log("Payload received", req.body);
+        const { payDate, userId } = req.body;
+
         if (!payDate) {
             return res.status(400).json({ success: false, error: "Period (YYYY-MM) is required" });
         }
 
+        const [year, month] = payDate.split("-");
+        const date = new Date(`${year}-${month}-01`);
+        const monthName = date.toLocaleString("default", { month: "short" });
+        const payeePeriodName = `${monthName} ${year} PAYE`;
+        const pensionPeriodName = `${monthName} ${year} Pension`;
+        const ITFperiodName = `${monthName} ${year} ITF`;
+        const NSITFperiodName = `${monthName} ${year} NSITF`;
+        const payrollperiodName = `${monthName} ${year} Payroll`;
+
+        // ---- Find or create the batch for this period ----
+        let batch = await payrollBatch.findOne({ period: payDate });
+
+        const user = await User.findById(userId)
+
+        if (!batch) {
+            batch = await payrollBatch.create({
+                period: payDate,
+                payrollPeriodName: payrollperiodName,
+                status: "Draft",
+                preparedBy: { userId: user.id, fullname: user.fullname, role: user.role },
+                auditTrail: [{
+                    action: "Draft Created",
+                    actor: { userId: user.id, fullname: user.fullname, role: user.role },
+                }],
+            });
+        }
+
+        // ---- Lock check: only editable-state batches can be synced ----
+        const editableStatuses = ["Draft", "RejectedByAccounts", "RejectedByMD"];
+        if (!editableStatuses.includes(batch.status)) {
+            return res.status(403).json({
+                success: false,
+                error: `Payroll for ${payrollperiodName} is in "${batch.status}" status and can no longer be modified`,
+            });
+        }
+
         const employees = await Employee.find().populate("job.grade").populate("hmo");
         const updatedPayrolls = [];
-        
-        const beneficiary = employees.beneficiary || []
-        const hmo = employees.hmo?.amount || 0
-        const hmoAmount = beneficiary.length * hmo
+
         for (let i = 0; i < employees.length; i++) {
             const employee = employees[i];
             const employeeId = employee._id;
-            let currentPayroll
-            const existingPayroll = await Payroll.findOne({
-                employeeId: employee._id,
-                payDate
-            });
+            let currentPayroll;
 
-            // Salary & recurring from grade
+            const existingPayroll = await Payroll.findOne({ employeeId, period: payDate });
+
             const basicSalary = employee.job.grade.basicSalary || 0;
             const housingAllowance = employee.job.grade.housingAllowance || 0;
             const wardrobeAllowance = employee.job.grade.wardrobeAllowance || 0;
@@ -281,78 +306,77 @@ const syncPayrollsForPeriod = async (req, res) => {
             const totalRecurringAllowance =
                 housingAllowance + wardrobeAllowance + transportAllowance + medicalAllowance;
 
-            // Permanent modifiers
             const permAllowances = employee.salaryModifiers?.allowances || [];
             const permDeductions = employee.salaryModifiers?.deductions || [];
-
             const totalPermAllowances = permAllowances.reduce((sum, a) => sum + (a.amount || 0), 0);
             const totalPermDeductions = permDeductions.reduce((sum, d) => sum + (d.amount || 0), 0);
 
-                // Paye & Pension Computaion 
-            // step 1 - Calculate Gross Pay 
-            const grossPay = basicSalary + totalRecurringAllowance
-            const annualGrossPay = grossPay * 12
-            const pensionPay = basicSalary + housingAllowance + transportAllowance
-            const pensionPerMonth = pensionPay * 0.08
-            const annualPension = pensionPerMonth * 12
-            const pensionGross = annualGrossPay - annualPension
-            const CRA = Math.max(200000, 0.01 * pensionGross) + (0.20 * pensionGross);
-            const taxRelief = CRA + annualPension;
+            const beneficiary = employee.beneficiary || [];
+            const hmo = employee.hmo?.amount || 0;
+            const hmoAmount = beneficiary.length * hmo;
 
-            const taxableIncome = annualGrossPay - taxRelief
-            //computation of ITFs
-            const ITFamount = grossPay * 0.01
-            //computation of PAY
+            // ---- PAYE & Pension computation (Nigeria Tax Act 2025, effective Jan 2026) ----
+            // Step 1 - Gross pay
+            const grossPay = basicSalary + totalRecurringAllowance;
+            const annualGrossPay = grossPay * 12;
+
+            // Step 2 - Pension (basis unchanged under new law: basic + housing + transport, 8%)
+            const pensionPay = basicSalary + housingAllowance + transportAllowance;
+            const pensionPerMonth = pensionPay * 0.08;
+            const annualPension = pensionPerMonth * 12;
+
+            // Step 3 - Taxable income: CRA abolished, only pension deducted (rent relief excluded)
+            const taxableIncome = annualGrossPay - annualPension;
+
+            // Step 4 - ITF (unchanged)
+            const ITFamount = grossPay * 0.01;
+
+            // Step 5 - PAYE using new 2026 bands
             let remaining = taxableIncome;
             let PAYE = 0;
 
             if (remaining > 0) {
-            const band1 = Math.min(300000, remaining);
-            PAYE += band1 * 0.07;
-            remaining -= band1;
+                const band1 = Math.min(800000, remaining);       // 0% up to ₦800k
+                PAYE += band1 * 0;
+                remaining -= band1;
             }
-
             if (remaining > 0) {
-            const band2 = Math.min(300000, remaining);
-            PAYE += band2 * 0.11;
-            remaining -= band2;
+                const band2 = Math.min(2200000, remaining);      // ₦800k - ₦3m @ 15%
+                PAYE += band2 * 0.15;
+                remaining -= band2;
             }
-
             if (remaining > 0) {
-            const band3 = Math.min(500000, remaining);
-            PAYE += band3 * 0.15;
-            remaining -= band3;
+                const band3 = Math.min(9000000, remaining);      // ₦3m - ₦12m @ 18%
+                PAYE += band3 * 0.18;
+                remaining -= band3;
             }
-
             if (remaining > 0) {
-            const band4 = Math.min(500000, remaining);
-            PAYE += band4 * 0.19;
-            remaining -= band4;
+                const band4 = Math.min(13000000, remaining);     // ₦12m - ₦25m @ 21%
+                PAYE += band4 * 0.21;
+                remaining -= band4;
             }
-
             if (remaining > 0) {
-            const band5 = Math.min(1600000, remaining);
-            PAYE += band5 * 0.21;
-            remaining -= band5;
+                const band5 = Math.min(25000000, remaining);     // ₦25m - ₦50m @ 23%
+                PAYE += band5 * 0.23;
+                remaining -= band5;
             }
-
             if (remaining > 0) {
-            PAYE += remaining * 0.24;
+                PAYE += remaining * 0.25;                          // above ₦50m @ 25%
             }
 
-            const minimumTax = 0.01 * pensionGross;
-            PAYE = Math.max(PAYE, minimumTax);
+            // No minimum tax floor under new law — the 0% band already covers low earners
             const monthlyPAYE = PAYE / 12;
-                    
+
             if (!existingPayroll) {
-                // CREATE payroll (one-time arrays empty)
                 const totalEarnings = basicSalary + totalRecurringAllowance + totalPermAllowances;
                 const totalDeductions = totalPermDeductions;
-                const netSalary = totalEarnings - totalDeductions - monthlyPAYE - pensionPerMonth - hmoAmount
-                
+                const netSalary = totalEarnings - totalDeductions - monthlyPAYE - pensionPerMonth - hmoAmount;
+
                 const payroll = new Payroll({
-                    employeeId: employee._id,
+                    employeeId,
+                    batchId: batch._id,
                     period: payDate,
+                    payDate: date,
                     basicSalary,
                     housingAllowance,
                     wardrobeAllowance,
@@ -365,110 +389,102 @@ const syncPayrollsForPeriod = async (req, res) => {
                     totalEarnings,
                     totalDeductions,
                     netSalary,
-                    status: "Draft",
+                    status: batch.status,
                     payrollperiodName,
                     monthlyPAYE,
                     pensionPerMonth,
-                    payDate
                 });
 
                 await payroll.save();
                 updatedPayrolls.push(payroll);
-                currentPayroll = payroll
+                currentPayroll = payroll;
             } else {
-                // UPDATE payroll (only permanent stuff)
-                const totalEarnings =
-                    existingPayroll.basicSalary +
-                    existingPayroll.housingAllowance +
-                    existingPayroll.wardrobeAllowance +
-                    existingPayroll.transportAllowance +
-                    existingPayroll.medicalAllowance +
-                    totalPermAllowances +
-                    (existingPayroll.oneTimeAllowances?.reduce((sum, a) => sum + (a.amount || 0), 0) || 0);
+                const oneTimeAllowTotal = existingPayroll.oneTimeAllowances?.reduce((s, a) => s + (a.amount || 0), 0) || 0;
+                const oneTimeDeductTotal = existingPayroll.oneTimeDeductions?.reduce((s, d) => s + (d.amount || 0), 0) || 0;
 
-                const totalDeductions =
-                    totalPermDeductions +
-                    (existingPayroll.oneTimeDeductions?.reduce((sum, d) => sum + (d.amount || 0), 0) || 0);
+                const totalEarnings = basicSalary + totalRecurringAllowance + totalPermAllowances + oneTimeAllowTotal;
+                const totalDeductions = totalPermDeductions + oneTimeDeductTotal;
+                const netSalary = totalEarnings - totalDeductions - monthlyPAYE - pensionPerMonth - hmoAmount;
 
+                existingPayroll.batchId = batch._id;
+                existingPayroll.basicSalary = basicSalary;
+                existingPayroll.housingAllowance = housingAllowance;
+                existingPayroll.wardrobeAllowance = wardrobeAllowance;
+                existingPayroll.transportAllowance = transportAllowance;
+                existingPayroll.medicalAllowance = medicalAllowance;
                 existingPayroll.permAllowances = permAllowances;
                 existingPayroll.permDeductions = permDeductions;
                 existingPayroll.totalEarnings = totalEarnings;
                 existingPayroll.totalDeductions = totalDeductions;
-                existingPayroll.netSalary = totalEarnings - totalDeductions;
-                
+                existingPayroll.netSalary = netSalary;
+                existingPayroll.monthlyPAYE = monthlyPAYE;
+                existingPayroll.pensionPerMonth = pensionPerMonth;
+                existingPayroll.status = batch.status;
+
                 await existingPayroll.save();
                 updatedPayrolls.push(existingPayroll);
-                currentPayroll = existingPayroll
+                currentPayroll = existingPayroll;
             }
-                
-            let payee = await PAYEE.findOne({ employeeId, period:payDate });
-             if(!payee) {
-                payee = new PAYEE({
-                    employeeId,
-                    payrollId: currentPayroll._id,
-                    period:payDate,
-                    name: payeePeriodName,
-                    amount: monthlyPAYE
-                    })
-                } 
-                await payee.save()
 
-                let pension = await Pension.findOne({ employeeId, period:payDate });
+            // ---- Ledger upserts (PAYEE, Pension, ITF, HMO, NSITF) ----
+            let payee = await PAYEE.findOne({ employeeId, period: payDate });
+            if (!payee) {
+                payee = new PAYEE({ employeeId, payrollId: currentPayroll._id, period: payDate, name: payeePeriodName, amount: monthlyPAYE });
+            } else {
+                payee.amount = monthlyPAYE;
+            }
+            await payee.save();
 
-                if(!pension) {
-                pension = new Pension({
-                    employeeId,
-                    payrollId: currentPayroll._id,
-                    period:payDate,
-                    name: pensionPeriodName,
-                    amount: pensionPerMonth
-                    })
-                } 
-                await pension.save()
+            let pension = await Pension.findOne({ employeeId, period: payDate });
+            if (!pension) {
+                pension = new Pension({ employeeId, payrollId: currentPayroll._id, period: payDate, name: pensionPeriodName, amount: pensionPerMonth });
+            } else {
+                pension.amount = pensionPerMonth;
+            }
+            await pension.save();
 
-                        let ITFs = await ITF.findOne({employeeId, period:payDate})
+            let ITFs = await ITF.findOne({ employeeId, period: payDate });
+            if (!ITFs) {
+                ITFs = new ITF({ employeeId, payrollId: currentPayroll._id, period: payDate, name: ITFperiodName, amount: ITFamount });
+            } else {
+                ITFs.amount = ITFamount;
+            }
+            await ITFs.save();
 
-                if(!ITFs) {
-                    ITFs = new ITF({
-                        employeeId,
-                        payrollId: currentPayroll._id,
-                        period:payDate,
-                        name: ITFperiodName,
-                        amount: ITFamount
-                    })
-                }
+            let HMO = await HmoDeductions.findOne({ employeeId, period: payDate });
+            if (!HMO) {
+                HMO = new HmoDeductions({ employeeId, payrollId: currentPayroll._id, period: payDate, name: payeePeriodName, amount: hmoAmount });
+            } else {
+                HMO.amount = hmoAmount;
+            }
+            await HMO.save();
 
-                await ITFs.save()
-                 let HMO = await HmoDeductions.findOne({ employeeId, period:payDate });
-                if(!HMO) {
-                HMO = new HmoDeductions({
-                    employeeId,
-                    payrollId: currentPayroll._id,
-                    period:payDate,
-                    name: payeePeriodName,
-                    amount: hmoAmount
-                    })
-                } 
-                await HMO.save()
-
-                let NSITFs = await NSITF.findOne({employeeId, period:payDate })
-
-                if(!NSITFs) {
-                    NSITFs = new NSITF({
-                        employeeId,
-                        payrollId: currentPayroll._id,
-                        period:payDate,
-                        name: NSITFperiodName,
-                        amount: ITFamount
-                    })
-                }
-
-                await NSITFs.save()
+            let NSITFs = await NSITF.findOne({ employeeId, period: payDate });
+            if (!NSITFs) {
+                NSITFs = new NSITF({ employeeId, payrollId: currentPayroll._id, period: payDate, name: NSITFperiodName, amount: ITFamount });
+            } else {
+                NSITFs.amount = ITFamount;
+            }
+            await NSITFs.save();
         }
+
+        // ---- Refresh batch totals ----
+        const totals = updatedPayrolls.reduce((acc, p) => {
+            acc.totalEmployees += 1;
+            acc.grossPayroll += p.totalEarnings;
+            acc.totalDeductions += p.totalDeductions;
+            acc.totalNetPay += p.netSalary;
+            return acc;
+        }, { totalEmployees: 0, grossPayroll: 0, totalDeductions: 0, totalNetPay: 0 });
+
+        batch.totals = totals;
+        await batch.save();
+
         return res.status(200).json({
             success: true,
             message: "Payrolls synced successfully for period " + payDate,
-            payrolls: updatedPayrolls
+            batch,
+            payrolls: updatedPayrolls,
         });
     } catch (error) {
         console.error("Error syncing payrolls:", error);

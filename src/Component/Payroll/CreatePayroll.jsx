@@ -3,11 +3,15 @@ import { useState } from "react";
 import Loader from "../reuseables/Loader";
 import { useToastContext } from "../../Context/ToastContext";
 import { api } from "../../api/request";
+import { useAuth } from "../../Context/authContext";
 
 const CreatePayroll = ({ onSuccess }) => {
-  const { showError } = useToastContext();
+  const { showError, showSuccess } = useToastContext();
   const [payDate, setPayDate] = useState("");
   const [loading, setLoading] = useState(false);
+  const {user} = useAuth()
+
+  const userId = user._id
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,11 +19,12 @@ const CreatePayroll = ({ onSuccess }) => {
       setLoading(true);
       const response = await api.put(
         `/employee/payroll/sync`,
-        { payDate }, 
+        { payDate, userId }, 
       );
 
       if (response.data.success) {
-        setLoading(false);
+        showSuccess(response.data.message)
+        setLoading(false); 
         if (onSuccess) {
           onSuccess();
         }

@@ -8,7 +8,7 @@ const employeeSchema = new mongoose.Schema({
     dob: Date,
     gender: String,
     maritalStatus: String,
-    password: String,
+    authorisation: String,
     address: String,
     phone: String,
     emergencyContact: {

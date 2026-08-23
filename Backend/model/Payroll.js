@@ -4,6 +4,7 @@ import Employee from "./Employee.js";
 
 const payrollSchema = new mongoose.Schema({
     employeeId: {type: mongoose.Schema.Types.ObjectId, ref: 'Employee', required: true},
+    batchId: { type: mongoose.Schema.Types.ObjectId, ref: "PayrollBatch", required: true }, // 👈 new
     period: { type: String, required: true },
     payDate: {type: Date, required: true},
     basicSalary: {type: Number, required: true},
@@ -12,8 +13,19 @@ const payrollSchema = new mongoose.Schema({
     transportAllowance:{type: Number},
     medicalAllowance:{type: Number},
     payee:{type:Number},
-    status: {type: String, required: true, enum: ['Draft', 'Finalized', 'Paid'], default:'Draft'},
-
+    status: {
+        type: String,
+        enum: [
+            "Draft",
+            "PendingAccountsReview",
+            "PendingMDApproval",
+            "Approved",
+            "Paid",
+            "RejectedByAccounts",
+            "RejectedByMD",
+        ],
+        default: "Draft",
+    },
     oneTimeAllowances: [
         {
             label: { type: String },

@@ -38,7 +38,7 @@ export const employeeMenuItems = [
     title: "Financial Audits",
     icon: FaCalculator,
     path: "/employee-dashboard/financial-audits",
-    allowedPositions: ["accountant"],
+    allowedPositions: ["Account"],
   },
   // --- DIRECTOR ONLY ITEMS ---
   {

@@ -178,7 +178,7 @@ const DepartmentList = () => {
                   Export
                 </button>
                 <Link
-                  to="/admin-dashboard/departments/add"
+                  to="/admin-dashboard/add-new-department"
                   className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
                 >
                   <Plus size={16} />

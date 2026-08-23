@@ -28,7 +28,7 @@ export const login = async (req, res) => {
             process.env.JWT_KEY,
             {expiresIn: '10d'}
         )
-        res.status(200).json({success: true, token, user:{_id: existingUser._id, role: existingUser.role, fullname:existingUser.fullname}})
+        res.status(200).json({success: true, token, user:{_id: existingUser._id, role: existingUser.role, fullname:existingUser.fullname, authorisation:existingUser.authorisation}})
 
     } catch(err){
         res.status(500).json({error: err.message})

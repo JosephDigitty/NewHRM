@@ -268,3 +268,19 @@ export const PayrollPermanentButtons = ({ id }) => {
     </ActionCell>
   );
 };
+
+export const getEmployee = async (id) => {
+  const response = await api.get(`/employee/${id}`);
+  if (response.data.success) {
+    return response.data.employee;
+  }
+  throw new Error(response.data.error || "Failed to fetch employee details");
+};
+
+export const getDisciplinaryRecords = async (employeeId) => {
+  const response = await api.get(`/employee-records/${employeeId}`);
+  if (response.data.success) {
+    return response.data.records;
+  }
+  throw new Error(response.data.error || "Failed to fetch disciplinary records");
+};

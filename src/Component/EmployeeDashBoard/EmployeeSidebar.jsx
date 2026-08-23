@@ -1,17 +1,19 @@
 import { NavLink } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { employeeMenuItems } from "../reuseables/links/EmployeeLinks";
 import { useAuth } from "../../Context/authContext";
 
 const EmployeeSidebar = ({ isMenuOpen }) => {
   const [openMenu, setOpenMenu] = useState(null);
-  const { user } = useAuth();
-
+  const { user, loading } = useAuth();
+    if (loading) return null
   const toggleSubMenu = (title) => {
     setOpenMenu(openMenu === title ? null : title);
   };
+   
+ console.log(user?.authorisation)
 
-  const userPosition = user?.position?.trim().toLowerCase();
+  const userPosition = user?.authorisation?.trim().toLowerCase();
 
   // Filter items: show general items + items matching the user's position
   const filteredMenuItems = employeeMenuItems.filter((item) => {

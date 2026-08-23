@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import { configDotenv } from "dotenv";
+configDotenv();
+
 import connectToDatabase from "./db/db.js";
 import { userRegister } from "./userSeed.js";
 import router from "./routes/auth.js";
@@ -9,6 +11,7 @@ import EmployeeRouter from "./routes/employeeRoutes.js";
 import LeaveRouter from "./routes/leave.js";
 import GradeRouter from "./routes/grade.js";
 import payrollRouter from "./routes/payroll.js";
+import recordRouter from "./routes/recordRoute.js";
 import hmoRouter from "./routes/hmo.js";
 import statutoryRouter from "./routes/statutory.js";
 import appraisalRouter from "./routes/appraisal.js";
@@ -19,7 +22,7 @@ import seedLeaveTypes from "./leaveSeed.js";
 import seedLeaveBalances from "./leaveBalanceSeed.js";
 import resetLeaveBalancesForNewYear from "./resetLeaveBalanceForNew.js";
 
-configDotenv();
+
 const app = express();
 app.use(
   cors({
@@ -39,6 +42,7 @@ app.use("/api/employee", statutoryRouter);
 app.use("/api/hmo", hmoRouter);
 app.use("/api/appraisal", appraisalRouter);
 app.use("/api/todo", todoRouter);
+app.use("/api/employee", recordRouter);
 app.use(
   "/uploads",
   express.static(path.join(path.resolve(), "public/uploads"))

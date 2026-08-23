@@ -29,14 +29,10 @@ const Login = () => {
 
     if (user.role === "employee") {
       // Standardize position string (remove trailing/leading whitespace and ignore casing)
-      const position = user.position?.trim().toLowerCase();
+      const position = user.authorisation?.trim().toLowerCase();
 
-      if (position === "accountant") {
-        return "/accountant-dashboard";
-      }
-
-      if (position === "director") {
-        return "/position-dashboard";
+      if (position === "account" || "director" ) {
+        return "/user-exe-dashboard";
       }
 
       return "/employee-dashboard";

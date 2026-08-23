@@ -77,6 +77,9 @@ const AddEmployee = () => {
 
       if (response.data.success) {
         navigate("/admin-dashboard/Employees");
+        showSuccess(response.data.message)
+        console.log(response.data.temporaryPassword)
+        console.log(response.data)
       }
     } catch (error) {
       if (error.response && !error.response.data.success) {

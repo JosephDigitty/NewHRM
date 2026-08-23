@@ -16,6 +16,7 @@ import {
   FaTimes,
   FaUpload,
 } from "react-icons/fa";
+import { getEmployee } from "../../utils/EmployeeHelper";
 import { useAuth } from "../../Context/authContext";
 
 const formatDate = (dateStr) => {
@@ -124,7 +125,7 @@ const getSeverityColor = (severity) => {
     case "Medium":
       return "bg-orange-100 text-orange-700";
     case "Low":
-      return "bg-purple-100 text-purple-700";
+      return "bg-green-100 text-green-700";
     default:
       return "bg-gray-100 text-gray-700";
   }
@@ -137,7 +138,7 @@ const getSeverityBg = (severity) => {
     case "Medium":
       return "bg-orange-100 text-orange-700";
     case "Low":
-      return "bg-purple-100 text-purple-700";
+      return "bg-green-100 text-green-700";
     default:
       return "bg-gray-100 text-gray-700";
   }
@@ -145,7 +146,7 @@ const getSeverityBg = (severity) => {
 
 const getStatusColor = (status) => {
   return status === "Open"
-    ? "bg-purple-100 text-purple-700"
+    ? "bg-green-100 text-green-700"
     : "bg-gray-100 text-gray-700";
 };
 
@@ -154,38 +155,38 @@ const EmployeeSingular = () => {
   const [employee, setEmployeee] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("disciplinary");
-  const [records, setRecords] = useState([]);
-  const [dataRecord, setDataRecord] = useState([]);
-  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [selectedRecord, setSelectedRecord] = useState(MOCK_DISCIPLINARY_RECORDS[0]);
+  const [showRecordModal, setShowRecordModal] = useState(false);
   const { id } = useParams();
 
+  const [recordForm, setRecordForm] = useState({
+  title: "",
+  type: "",
+  date: "",
+  status: "Open",
+  location: employee?.job?.workLocation || "",
+  description: "",
+  actionTaken: "",
+  employeeResponse: "",
+  });
+
   useEffect(() => {
-    const fetchEmployee = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get(`/employee/${id}`);
-        if (response.data.success) {
-          setEmployeee([response.data.employee]);
-        }
-        const recRes = await api.get(`/employee/employee-records/${id}`)
-        if (recRes.data.success) {
-            console.log("Case Sample", recRes.data.data)
-          setDataRecord(recRes.data.data);
-        } else {
-            console.log(recRes.data)
-        }
-      } catch (error) {
-        if (error.response && !error.response.data.success) {
-          showError(error.response.data.error);
-        } else {
+      const fetchEmployee = async () => {
+        setLoading(true);
+
+        try {
+          const employee = await getEmployee(id);
+          setEmployeee([employee]);
+        } catch (error) {
           showError(
-            error.message || "An error occurred while fetching employee",
+            error.response?.data?.error ||
+            error.message ||
+            "An error occurred while fetching employee"
           );
+        } finally {
+          setLoading(false);
         }
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
     fetchEmployee();
   }, [id, showError]);
 
@@ -230,7 +231,7 @@ const EmployeeSingular = () => {
             <input
               type="text"
               placeholder="Search employees, documents..."
-              className="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-purple-500 w-80"
+              className="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 w-80"
             />
           </div>
         </div>
@@ -244,9 +245,7 @@ const EmployeeSingular = () => {
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
           <div className="flex items-center gap-2 pl-4 border-l border-slate-200 ml-2">
-            <span className="text-sm font-medium text-slate-700">
-              Digitty Corporation
-            </span>
+            <span className="text-sm font-medium text-slate-700">Acme Corporation</span>
             <FaChevronDown size={12} className="text-slate-400" />
           </div>
         </div>
@@ -274,7 +273,7 @@ const EmployeeSingular = () => {
                 <h1 className="text-2xl font-bold text-slate-900">
                   {emp.userId.fullname}
                 </h1>
-                <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+                <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
                   Active
                 </span>
               </div>
@@ -351,7 +350,7 @@ const EmployeeSingular = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                     activeTab === tab.id
-                      ? "border-purple-600 text-purple-600"
+                      ? "border-teal-600 text-teal-600"
                       : "border-transparent text-slate-500 hover:text-slate-700"
                   }`}
                 >
@@ -388,9 +387,7 @@ const EmployeeSingular = () => {
                     </p>
                   </div>
                   <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <p className="text-xs text-slate-500 mb-1">
-                      Marital Status
-                    </p>
+                    <p className="text-xs text-slate-500 mb-1">Marital Status</p>
                     <p className="text-sm font-medium text-slate-900">
                       {emp.personal?.maritalStatus || "N/A"}
                     </p>
@@ -424,9 +421,7 @@ const EmployeeSingular = () => {
                     </p>
                   </div>
                   <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <p className="text-xs text-slate-500 mb-1">
-                      Employment Type
-                    </p>
+                    <p className="text-xs text-slate-500 mb-1">Employment Type</p>
                     <p className="text-sm font-medium text-slate-900">
                       {emp.job?.employmentType || "N/A"}
                     </p>
@@ -438,9 +433,7 @@ const EmployeeSingular = () => {
                     </p>
                   </div>
                   <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <p className="text-xs text-slate-500 mb-1">
-                      Date of Joining
-                    </p>
+                    <p className="text-xs text-slate-500 mb-1">Date of Joining</p>
                     <p className="text-sm font-medium text-slate-900">
                       {formatDate(emp.job?.dateOfHire)}
                     </p>
@@ -473,9 +466,7 @@ const EmployeeSingular = () => {
                   Performance Overview
                 </h3>
                 <div className="p-8 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                  <p className="text-slate-500">
-                    Performance appraisal data will be displayed here.
-                  </p>
+                  <p className="text-slate-500">Performance appraisal data will be displayed here.</p>
                 </div>
               </div>
             )}
@@ -486,9 +477,7 @@ const EmployeeSingular = () => {
                   Leave Management
                 </h3>
                 <div className="p-8 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                  <p className="text-slate-500">
-                    Leave records and balances will be displayed here.
-                  </p>
+                  <p className="text-slate-500">Leave records and balances will be displayed here.</p>
                 </div>
               </div>
             )}
@@ -498,94 +487,70 @@ const EmployeeSingular = () => {
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">
                   Documents
                 </h3>
-                {!emp.documents ||
-                !(
-                  emp.documents?.offerLetter ||
-                  emp.documents?.resume ||
-                  emp.documents?.nationalId ||
-                  emp.documents?.passport
-                ) ? (
-                  <div className="p-8 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                    <p className="text-slate-500">No document uploaded</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-4">
-                    {emp.documents?.offerLetter && (
-                      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
-                        <div className="flex items-center gap-3">
-                          <FaFilePdf className="text-red-500 text-xl" />
-                          <div>
-                            <p className="text-sm font-medium text-slate-900">
-                              Offer Letter
-                            </p>
-                            <p className="text-xs text-slate-500">PDF Document</p>
-                          </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {emp.documents?.offerLetter && (
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center gap-3">
+                        <FaFilePdf className="text-red-500 text-xl" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">Offer Letter</p>
+                          <p className="text-xs text-slate-500">PDF Document</p>
                         </div>
-                        <button className="p-2 text-slate-400 hover:text-purple-600">
-                          <FaDownload size={16} />
-                        </button>
                       </div>
-                    )}
-                    {emp.documents?.resume && (
-                      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
-                        <div className="flex items-center gap-3">
-                          <FaFilePdf className="text-red-500 text-xl" />
-                          <div>
-                            <p className="text-sm font-medium text-slate-900">
-                              Resume
-                            </p>
-                            <p className="text-xs text-slate-500">PDF Document</p>
-                          </div>
+                      <button className="p-2 text-slate-400 hover:text-teal-600">
+                        <FaDownload size={16} />
+                      </button>
+                    </div>
+                  )}
+                  {emp.documents?.resume && (
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center gap-3">
+                        <FaFilePdf className="text-red-500 text-xl" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">Resume</p>
+                          <p className="text-xs text-slate-500">PDF Document</p>
                         </div>
-                        <button className="p-2 text-slate-400 hover:text-purple-600">
-                          <FaDownload size={16} />
-                        </button>
                       </div>
-                    )}
-                    {emp.documents?.nationalId && (
-                      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
-                        <div className="flex items-center gap-3">
-                          <FaFileImage className="text-blue-500 text-xl" />
-                          <div>
-                            <p className="text-sm font-medium text-slate-900">
-                              National ID
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              Image Document
-                            </p>
-                          </div>
+                      <button className="p-2 text-slate-400 hover:text-teal-600">
+                        <FaDownload size={16} />
+                      </button>
+                    </div>
+                  )}
+                  {emp.documents?.nationalId && (
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center gap-3">
+                        <FaFileImage className="text-blue-500 text-xl" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">National ID</p>
+                          <p className="text-xs text-slate-500">Image Document</p>
                         </div>
-                        <button className="p-2 text-slate-400 hover:text-purple-600">
-                          <FaDownload size={16} />
-                        </button>
                       </div>
-                    )}
-                    {emp.documents?.passport && (
-                      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
-                        <div className="flex items-center gap-3">
-                          <FaFileImage className="text-blue-500 text-xl" />
-                          <div>
-                            <p className="text-sm font-medium text-slate-900">
-                              Passport
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              Image Document
-                            </p>
-                          </div>
+                      <button className="p-2 text-slate-400 hover:text-teal-600">
+                        <FaDownload size={16} />
+                      </button>
+                    </div>
+                  )}
+                  {emp.documents?.passport && (
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center gap-3">
+                        <FaFileImage className="text-blue-500 text-xl" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">Passport</p>
+                          <p className="text-xs text-slate-500">Image Document</p>
                         </div>
-                        <button className="p-2 text-slate-400 hover:text-purple-600">
-                          <FaDownload size={16} />
-                        </button>
                       </div>
-                    )}
-                  </div>
-                )}
+                      <button className="p-2 text-slate-400 hover:text-teal-600">
+                        <FaDownload size={16} />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
             {activeTab === "disciplinary" && (
               <DisciplinaryRecords
-                records={dataRecord}
+                records={MOCK_DISCIPLINARY_RECORDS}
                 selectedRecord={selectedRecord}
                 setSelectedRecord={setSelectedRecord}
                 employee={emp}
@@ -598,15 +563,14 @@ const EmployeeSingular = () => {
                   Notes
                 </h3>
                 <div className="p-8 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                  <p className="text-slate-500">
-                    Employee notes will be displayed here.
-                  </p>
+                  <p className="text-slate-500">Employee notes will be displayed here.</p>
                 </div>
               </div>
             )}
           </div>
         </div>
       </div>
+
     </div>
   );
 };
@@ -633,25 +597,23 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
 
     const [showRecordModal, setShowRecordModal] = useState(false);
 
-   const [recordForm, setRecordForm] = useState({
-    title: "",
-    type: "",
-    date: "",
-    status: "Open",
-    location: employee?.job?.workLocation || "",
-    description: "",
-    actionTaken: "",
-    employeeResponse: "",
-    severity: "",
-    documents: [], // renamed to plural, holds File[]
+    const [recordForm, setRecordForm] = useState({
+      title: "",
+      type: "",
+      date: "",
+      status: "Open",
+      location: employee?.job?.workLocation || "",
+      description: "",
+      actionTaken: "",
+      employeeResponse: "",
     });
 
     const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log("recordForm.documents at submit:", recordForm.documents);
-    try {
-      const formData = new FormData();
-
+      e.preventDefault()
+      console.log("Document to upload:", recordForm.document);
+      try {
+        const formData = new FormData();
+        
       formData.append("title", recordForm.title);
       formData.append("description", recordForm.description);
       formData.append("date", recordForm.date);
@@ -659,36 +621,40 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
       formData.append("status", recordForm.status);
       formData.append("location", recordForm.location);
       formData.append("actionTaken", recordForm.actionTaken);
-      formData.append("employeeResponse", recordForm.employeeResponse);
-      formData.append("severity", recordForm.severity);
+      formData.append("employeeResponse",recordForm.employeeResponse);
       formData.append("userid", userid);
 
-      recordForm.documents.forEach((file) => {
-        formData.append("documents", file);
-      });
-      const res = await api.post(`/employee/employee-records/${id}`, formData);
-      if (res.data.success) {
-        showSuccess(res.data.message);
-        setShowRecordModal(false);
-        setRecordForm({
-          title: "",
-          description: "",
-          date: "",
-          type: "",
-          status: "Open",
-          location: "",
-          actionTaken: "",
-          employeeResponse: "",
-          severity: "",
-          documents: [],
-        });
-      } else {
-        showError(res.data.error || "Failed to create record");
+      if (recordForm.document) {
+        formData.append("document", recordForm.document);
       }
-    } catch (error) {
-      showError(error.response?.data?.error || "Failed to create record");
-    }
-  };
+
+      const res = await api.post(
+        `/employee/employee-records/${id}`,
+        formData
+      )
+      if (res.data.success) {
+        showSuccess(res.data.message)
+        setShowRecordModal(false)
+        setRecordForm({
+        title: "",
+        description: "",
+        date: "",
+        type: "",
+        status: "Open",
+        location: "",
+        actionTaken: "",
+        employeeResponse: "",
+        document: null,
+      });
+      } else {
+         alert("error alert")
+         console.log(res.data)
+      }
+      } catch (error) {
+        showError(error.response?.data?.error || "Failed to create record");
+      }
+
+    } 
 
   return (
     <div>
@@ -772,10 +738,10 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
         <div className="w-2/5 space-y-3">
           {filteredRecords.map((record) => (
             <div
-              key={record._id}
+              key={record.id}
               onClick={() => setSelectedRecord(record)}
               className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                selectedRecord?._id === record._id
+                selectedRecord?.id === record.id
                   ? "border-teal-500 bg-teal-50"
                   : "border-slate-200 bg-white hover:border-slate-300"
               }`}
@@ -791,18 +757,18 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <h4 className="text-sm font-medium text-slate-900 truncate">
-                      {record.title}
+                      {record.type}
                     </h4>
                     <span
                       className={`px-2 py-0.5 text-xs font-medium rounded-full flex-shrink-0 ${getSeverityColor(
                         record.severity
                       )}`}
                     >
-                      {record.type}
+                      {record.severity}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
-                    {formatDate(record.Date)} · Case ID: {record.caseId}
+                    {formatDate(record.date)} · Case ID: {record.caseId}
                   </p>
                   <div className="flex items-center justify-between mt-2">
                     <span
@@ -826,7 +792,7 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
               {/* Detail Header */}
               <div className="flex items-center justify-between mb-6">
                 <h4 className="text-base font-semibold text-slate-900">
-                  {selectedRecord.title}
+                  {selectedRecord.type}
                 </h4>
                 <div className="flex items-center gap-2">
                   <span
@@ -848,7 +814,7 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
                   <div>
                     <p className="text-xs text-slate-500 mb-1">Incident Date</p>
                     <p className="text-sm text-slate-900">
-                      {formatDate(selectedRecord.Date)}
+                      {formatDate(selectedRecord.date)}
                     </p>
                   </div>
                   <div>
@@ -858,9 +824,9 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 mb-1">Created By</p>
+                    <p className="text-xs text-slate-500 mb-1">Reported By</p>
                     <p className="text-sm text-slate-900">
-                      Hr Admin
+                      {selectedRecord.reportedBy}
                     </p>
                   </div>
                   <div>
@@ -872,7 +838,7 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
                   <div>
                     <p className="text-xs text-slate-500 mb-1">Department</p>
                     <p className="text-sm text-slate-900">
-                      {employee.job?.department?.department_Name}
+                      {selectedRecord.department}
                     </p>
                   </div>
                   <div>
@@ -923,16 +889,16 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
               {/* Attachments */}
               <div className="border-t border-slate-200 pt-4">
                 <h5 className="text-sm font-semibold text-slate-900 mb-3">
-                  Attachments ({selectedRecord.documents?.length || 0})
+                  Attachments ({selectedRecord.attachments.length})
                 </h5>
                 <div className="space-y-2">
-                  {(selectedRecord.documents || []).map((file, idx) => (
+                  {selectedRecord.attachments.map((file, idx) => (
                     <div
-                      key={file.publicId || idx}
+                      key={idx}
                       className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200"
                     >
                       <div className="flex items-center gap-3">
-                        {file.name?.toLowerCase().endsWith(".pdf") ? (
+                        {file.name.endsWith(".pdf") ? (
                           <FaFilePdf className="text-red-500" />
                         ) : (
                           <FaFileImage className="text-blue-500" />
@@ -941,17 +907,12 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
                           <p className="text-sm font-medium text-slate-900">
                             {file.name}
                           </p>
-                          <p className="text-xs text-slate-500">{file.size ? `${Math.round(file.size / 1024)} KB` : ""}</p>
+                          <p className="text-xs text-slate-500">{file.size}</p>
                         </div>
                       </div>
-                      <a 
-                      href={file.url.replace("/upload/","/upload/fl_attachment/")}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      download
-                      className="p-2 text-slate-400 hover:text-teal-600">
+                      <button className="p-2 text-slate-400 hover:text-teal-600">
                         <FaDownload size={16} />
-                      </a>
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -1011,8 +972,6 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
             description: "",
             actionTaken: "",
             employeeResponse: "",
-            severity:"",
-            documents:[]
           });
         }}
         className="p-6"
@@ -1226,16 +1185,12 @@ const DisciplinaryRecords = ({ records, selectedRecord, setSelectedRecord, emplo
             <p className="text-xs text-slate-400 mt-1">
               PDF, DOCX, JPG or PNG
             </p>
+
             <input
               type="file"
-              multiple
               onChange={(e) => {
-                console.log("Files picked:", e.target.files);
-                if (e.target.files && e.target.files.length > 0) {
-                  setRecordForm({
-                    ...recordForm,
-                    documents: Array.from(e.target.files),
-                  });
+                if (e.target.files && e.target.files[0]) {
+                  setRecordForm({ ...recordForm, document: e.target.files[0] });
                 }
               }}
             />

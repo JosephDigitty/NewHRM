@@ -64,6 +64,7 @@ import SupervisorAppraisals from "./pages/SupervisorAppraisal";
 import GeneratePayee from "./Component/Payroll/GeneratePAYE";
 import GeneratePayrollNew from "./Component/Payroll/GeneratePayrollN";
 import EditHmo from "./Component/Hmo/EditHmo";
+import OldPayrollDashboard from "./Component/Payroll/OldPayrollDashboard";
 
 const App = () => {
   return (
@@ -247,8 +248,12 @@ const App = () => {
               element={<EmployeeTemporary />}
             ></Route>
             <Route
-              path="/admin-dashboard/payroll"
+              path="/admin-dashboard/payroll/latest"
               element={<PayrollDashboard />}
+            ></Route>
+            <Route
+              path="/admin-dashboard/payroll"
+              element={<OldPayrollDashboard />}
             ></Route>
             <Route
               path="/admin-dashboard/payroll/generate-Payroll"

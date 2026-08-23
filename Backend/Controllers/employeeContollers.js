@@ -1,51 +1,62 @@
-import multer from "multer"
 import Employee from "../model/Employee.js"
 import User from "../model/user.js"
 import bcrypt from "bcrypt"
-import path from "path"
 import Department from "../model/Department.js"
+import { generatePassword } from "../db/GeneratePassword.js"
+import { uploadToCloudinary } from "../db/CloudinaryUtils.js"
+import { sendWelcomeEmail } from "../db/NodeMailer.js"
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "public/uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ storage });
 
 const addEmployee = async (req, res) => {
-   try{
+  try {
     const { personal, job } = req.body;
-    const documents = {
-      offerLetter: req.files?.offerLetter?.[0]?.filename || null,
-      resume: req.files?.resume?.[0]?.filename || null,
-      nationalId: req.files?.nationalId?.[0]?.filename || null,
-      passport: req.files?.passport?.[0]?.filename || null,
-    };
-   const personalData = typeof personal === "string" ? JSON.parse(personal) : personal
-   const jobData = typeof req.body.job === "string" ? JSON.parse(job) : job;
-    const {fullname , email, password } = personalData
-    const {role} = jobData
-    const employeeId = fullname.slice(0,3) + Date.now()
-    const user = await User.findOne({email})
-    if(user) {
-        return res.status(400).json({success: false, error: "User already exists"})
+
+    const personalData = typeof personal === "string" ? JSON.parse(personal) : personal;
+    const jobData = typeof job === "string" ? JSON.parse(job) : job;
+
+    const { fullname, email, authorisation, dob } = personalData;
+    const { role, department } = jobData;
+
+    const user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({ success: false, error: "User already exists" });
     }
-    //then add the password
-    const hashPassword = await bcrypt.hash(password, 10)
+
+    const uploadIfExists = async (fieldName, folder) => {
+      const file = req.files?.[fieldName]?.[0];
+      if (!file) return null;
+      const result = await uploadToCloudinary(file.buffer, folder);
+      return result.secure_url;
+    };
+
+    const documents = {
+      offerLetter: await uploadIfExists("offerLetter", "employees/offer-letters"),
+      resume: await uploadIfExists("resume", "employees/resumes"),
+      nationalId: await uploadIfExists("nationalId", "employees/national-ids"),
+      passport: await uploadIfExists("passport", "employees/passports"),
+    };
+
+    const employeeId = fullname.slice(0, 3).toUpperCase() + Date.now();
+
+    const plainPassword = generatePassword(
+      process.env.COMPANY_NAME || "COMP",
+      fullname,
+      department,
+      dob
+    );
+    const hashPassword = await bcrypt.hash(plainPassword, 10);
+
     const newUser = new User({
-        fullname: fullname, 
-        email: email,
-        password: hashPassword,
-        role,
-        profileImage: documents.passport
-    })
+      fullname,
+      email,
+      password: hashPassword,
+      role,
+      profileImage: documents.passport,
+      authorisation,
+    });
 
-     await newUser.save()
-
+    await newUser.save();
+    
     const employee = new Employee({
       employeeId,
       personal: personalData,
@@ -53,17 +64,34 @@ const addEmployee = async (req, res) => {
       documents,
       userId: newUser._id,
     });
-        await employee.save() ;
-       
-    return res.status(201).json({success: true, messages: "Employee added successfully", employee: employee})
-   } catch (error) {
-        console.log(error.message)
-        
 
-       return res.status(500).json({success: false, error: "add employee server error"})
-   }
+    await employee.save();
 
-}
+    try {
+      await sendWelcomeEmail({
+        to: email,
+        fullname,
+        email,
+        password: plainPassword,
+      });
+    } catch (emailError) {
+      console.log("Welcome email failed to send:", emailError.message);
+      // don't return/throw — employee + user already saved successfully
+    }
+
+    return res.status(201).json({
+      success: true,
+      messages: "Employee added successfully",
+      employee,
+      temporaryPassword: plainPassword,
+    });
+    
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ success: false, error: "add employee server error" });
+  }
+};
+
 
 const getAllEmployee =  async (req, res) => {
     try{
@@ -140,4 +168,4 @@ const editEmployee = async (req, res) => {
     }
  }
 
-export {addEmployee, upload, getAllEmployee, getEmployee, editEmployee, getEmployeesByDepartment} 
+export {addEmployee, getAllEmployee, getEmployee, editEmployee, getEmployeesByDepartment} 
