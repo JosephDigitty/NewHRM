@@ -82,7 +82,7 @@ const PersonalInfoForm = ({
         <option value="">Authorization</option>
         <option value="Account">Account/Finance</option>
         <option value="Administrator">Administrator</option>
-        <option value="Director's Office">Director's Office</option>
+        <option value="Director">Director's Office</option>
         </select>
         <Input
           label="Email Address"

@@ -25,12 +25,17 @@ import EmployeeTable from "./PayrollReuseables/EmployeeTable";
 import PayrollBreakdownTab from "./PayrollReuseables/PayrollBreakdownTab";
 import ApprovalWorkflowTab from "./PayrollReuseables/ApprovalWorkflowTab";
 import AuditTrailTab from "./PayrollReuseables/AuditTrailTab";
+import { useAuth } from "../../Context/authContext";
 
 const PayrollDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [chartData, setChartData] = useState([]);
   const [payrolls, setPayrolls] = useState([]);
   const [activeTab, setActiveTab] = useState("Payroll Summary");
+  const [batch, setBatch] = useState({})
+  const [total, setTotal] = useState({})
+  const [preparedBy, setPreparedBy] = useState({})
+  const [auditTrail, setAuditTrail] = useState([])
   const [payrollDetails, setPayrollDetails] = useState({
     periodName: "September 2026 Payroll",
     status: "Draft",
@@ -44,6 +49,9 @@ const PayrollDashboard = () => {
     nextApproval: { name: "Accounts Department", role: "Review & Approval" },
     lastUpdated: "Sept 25, 2026 · 10:45 AM",
   });
+
+  const {user} = useAuth()
+  const userId = user?._id
   const [employees, setEmployees] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -73,6 +81,17 @@ const PayrollDashboard = () => {
         const res = await api.get(`/employee/payroll/activities?year=${currentYear}`);
         if (res.data.success) {
           setPayrolls(res.data.payrolls);
+        }
+        const response = await api.get("latest-batch")
+        if (response.data.success) {
+          setBatch(response.data.batch)
+          setTotal(response.data.batch.totals)
+          setPreparedBy(response.data.batch.preparedBy)
+          console.log(response.data.batch.preparedBy)
+          setAuditTrail(response.data.batch.auditTrail)
+          console.log(response.data.batch)
+        } else {
+          console.log(response.data)
         }
       } catch (error) {
         console.error("Error fetching payroll data:", error);
@@ -345,32 +364,102 @@ const PayrollDashboard = () => {
     return `₦${value.toLocaleString()}`;
   };
 
+  const handleSubmitForReview = async () => {
+  try {
+    const res = await api.post(`/payroll/batches/submit`, { batchId: batch._id, userId });
+    if (res.data.success) {
+      setBatch(res.data.batch);
+    }
+  } catch (error) {
+    console.error("Error submitting payroll:", error);
+  }
+};
+ const handleAccept = async () => {
+  try {
+    const res = await api.post("/payroll/batches/accept", {
+      batchId: batch._id,
+      userId: user._id,
+    });
+    if (res.data.success) {
+      setBatch(res.data.batch);
+    }
+  } catch (error) {
+    console.error("Error accepting payroll:", error);
+  }
+};
+
+const handleReject = async (comment) => {
+  try {
+    const endpoint =
+      batch.status === "Pending Accounts Review"
+        ? "/payroll/batches/accounts-review"
+        : "/payroll/batches/director-approval"; // or md-approval, depending on your final naming
+
+    const res = await api.post(endpoint, {
+      batchId: batch._id,
+      decision: "Rejected",
+      comment,
+    });
+
+    if (res.data.success) {
+      refreshBatch(res.data.batch);
+    }
+  } catch (error) {
+    console.error("Error rejecting payroll:", error);
+  }
+};
+
+ const getNextApproval = (auditTrail) => {
+  if (!auditTrail || auditTrail.length === 0) return null;
+
+  const latestEntry = auditTrail[auditTrail.length - 1];
+
+  switch (latestEntry.action) {
+    case "Draft Created":
+      return { name: "Accounts Department", role: "Review & Approval" };
+    case "Submitted":
+      return { name: "Accounts Department", role: "Review & Approval" };
+    case "Accounts Review":
+    case "Reviewed":
+      return { name: "Finance Director", role: "Final Approval" };
+    case "Approved":
+      return { name: "System", role: "Publish Payroll" };
+    default:
+      return { name: "Accounts Department", role: "Review & Approval" };
+  }
+};
+
   return (
     <>
       <main className="flex-1 p-8">
         <div className=" mx-auto">
-          <Breadcrumb periodName={payrollDetails.periodName} />
+          <Breadcrumb periodName={batch.payrollPeriodName} />
 
           <PageHeader
-            periodName={payrollDetails.periodName}
-            status={payrollDetails.status}
-            dateRange={payrollDetails.dateRange}
+            periodName={batch.payrollPeriodName}
+            status={batch.status}
+            dateRange={batch.period}
+            user={user}                              
+            onSubmitForReview={handleSubmitForReview}
+            onAccept={handleAccept}
+            onPay={handleAccept}
+            onReject={handleReject}
           />
 
           <StatsCards
-            totalEmployees={payrollDetails.totalEmployees}
-            grossPayroll={payrollDetails.grossPayroll}
-            totalDeductions={payrollDetails.totalDeductions}
-            totalNetPay={payrollDetails.totalNetPay}
+            totalEmployees={total?.totalEmployees || ""}
+            grossPayroll={total?.grossPayroll || 0}
+            totalDeductions={total?.totalDeductions || 0}
+            totalNetPay={total?.totalNetPay || 0}
             status="Pending Accounts Review"
             statusDescription="Submitted and awaiting review by Accounts Department"
           />
 
           <WorkflowSection
-            preparedBy={payrollDetails.preparedBy}
-            submittedAt={payrollDetails.submittedAt}
+            preparedBy={preparedBy.fullname || ''}
+            submittedAt={auditTrail?.[auditTrail.length - 1]?.timestamp || ''}
             nextApproval={payrollDetails.nextApproval}
-            lastUpdated={payrollDetails.lastUpdated}
+            lastUpdated={batch.updatedAt}
           />
 
           <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
@@ -454,10 +543,6 @@ const PayrollDashboard = () => {
           )}
         </div>
       </main>
-
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Run Payroll">
-        <CreatePayroll onSuccess={handleCloseModal} />
-      </Modal>
     </>
   );
 };

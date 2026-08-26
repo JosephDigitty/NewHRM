@@ -1,6 +1,20 @@
 import React from "react";
 import { MdPerson, MdEvent } from "react-icons/md";
 
+const formatDateTime = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date)) return dateString; // fallback if it's already a formatted string
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
 const WorkflowSection = ({ preparedBy, submittedAt, nextApproval, lastUpdated }) => {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
@@ -12,8 +26,8 @@ const WorkflowSection = ({ preparedBy, submittedAt, nextApproval, lastUpdated })
               <MdPerson className="text-gray-600" size={20} />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">{preparedBy.name}</p>
-              <p className="text-xs text-gray-500">{preparedBy.role}</p>
+              <p className="text-sm font-medium text-gray-900">{preparedBy?.name}</p>
+              <p className="text-xs text-gray-500">{preparedBy?.name}</p>
             </div>
           </div>
         </div>
@@ -21,7 +35,7 @@ const WorkflowSection = ({ preparedBy, submittedAt, nextApproval, lastUpdated })
           <h4 className="text-sm font-medium text-gray-500 mb-2">Submitted</h4>
           <div className="flex items-center gap-2">
             <MdEvent className="text-gray-400" size={18} />
-            <p className="text-sm text-gray-900">{submittedAt}</p>
+            <p className="text-sm text-gray-900">{formatDateTime(submittedAt)}</p>
           </div>
         </div>
         <div>
@@ -31,8 +45,8 @@ const WorkflowSection = ({ preparedBy, submittedAt, nextApproval, lastUpdated })
               <MdPerson className="text-orange-600" size={20} />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">{nextApproval.name}</p>
-              <p className="text-xs text-gray-500">{nextApproval.role}</p>
+              <p className="text-sm font-medium text-gray-900">{nextApproval?.name}</p>
+              <p className="text-xs text-gray-500">{nextApproval.name}</p>
             </div>
           </div>
         </div>
@@ -40,7 +54,7 @@ const WorkflowSection = ({ preparedBy, submittedAt, nextApproval, lastUpdated })
           <h4 className="text-sm font-medium text-gray-500 mb-2">Last Updated</h4>
           <div className="flex items-center gap-2">
             <MdEvent className="text-gray-400" size={18} />
-            <p className="text-sm text-gray-900">{lastUpdated}</p>
+            <p className="text-sm text-gray-900">{formatDateTime(lastUpdated)}</p>
           </div>
         </div>
       </div>

@@ -65,6 +65,8 @@ import GeneratePayee from "./Component/Payroll/GeneratePAYE";
 import GeneratePayrollNew from "./Component/Payroll/GeneratePayrollN";
 import EditHmo from "./Component/Hmo/EditHmo";
 import OldPayrollDashboard from "./Component/Payroll/OldPayrollDashboard";
+import AccountDashboard from "./pages/AccountDashboard";
+import AccountPayrollDashboard from "./Component/Payroll/PayrollDashboardAccount";
 
 const App = () => {
   return (
@@ -334,6 +336,70 @@ const App = () => {
               path="/employee-dashboard/add-leave"
               element={<RequestLeave />}
             ></Route>
+          </Route>
+          <Route path="/user-exe-dashboard" element={<AccountDashboard />}>
+           <Route index element={<EmployeeDetails />}></Route>
+            <Route
+              path="/user-exe-dashboard/profile/"
+              element={<EmployeeProfile />}
+            ></Route>
+            <Route
+              path="/user-exe-dashboard/salary-overview/"
+              element={<SalaryOverview />}
+            ></Route>
+            <Route
+              path="/user-exe-dashboard/payslip-history"
+              element={<PayslipHistory />}
+            ></Route>
+            <Route
+              path="/user-exe-dashboard/leaves"
+              element={<LeaveDashboard />}
+            ></Route>
+            <Route
+              path="/user-exe-dashboard/add-leave"
+              element={<RequestLeave />}
+            ></Route>
+            <Route
+              path="/user-exe-dashboard/payroll"
+              element={<AccountPayrollDashboard />}
+            ></Route>
+            <Route
+              path="/user-exe-dashboard/payroll/generate-Payroll"
+              element={<GeneratePayroll />}
+            ></Route>
+            <Route
+              path="/user-exe-dashboard/payroll/generate-new"
+              element={<GeneratePayrollNew />}
+            ></Route>
+            <Route
+              path="/user-exe-dashboard/payrolls/create-all/"
+              element={<CreatePayroll />}
+            ></Route>
+            <Route
+              path="/user-exe-dashboard/payroll/pension"
+              element={<GeneratePension />}
+            ></Route>
+            <Route
+              path="/user-exe-dashboard/payroll/payee"
+              element={<GeneratePayee />}
+            ></Route>
+            <Route
+              path="/user-exe-dashboard/payroll/itfs"
+              element={<GenerateITF />}
+            ></Route>
+            <Route
+              path="/user-exe-dashboard/payroll/nsitfs"
+              element={<GenerateNSITF />}
+            ></Route>
+            <Route
+              path="/user-exe-dashboard/payrolls/create-banks/"
+              element={<GeneratePayrollForBank />}
+            ></Route>
+            <Route
+            path="/user-exe-dashboard/payroll/latest"
+            element={<PayrollDashboard />}
+            >  
+            </Route>
           </Route>
         </Routes>
         <ToastContainer />
