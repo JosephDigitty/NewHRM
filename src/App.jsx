@@ -35,6 +35,9 @@ import GenerateITF from "./Component/Payroll/GenerateITF";
 import GenerateNSITF from "./Component/Payroll/GenerateNSITF";
 import GeneratePayrollForBank from "./Component/Payroll/PayrollforBank";
 import EmployeeProfile from "./Component/EmployeeDashBoard/EmployeeProfile";
+import CashRequisitionDashboard from "./pages/CashRequisitionDashboard";
+import CashRequisitionForm from "./pages/CashRequisitionForm";
+import CashRequisitionLayout from "./pages/CashRequisitionLayout";
 import CreateHmo from "./Component/Hmo/CreateHmo";
 import GetHmo from "./Component/Hmo/GetHmo";
 
@@ -336,6 +339,10 @@ const App = () => {
               path="/employee-dashboard/add-leave"
               element={<RequestLeave />}
             ></Route>
+          </Route>
+          <Route path="/cash-requisition" element={<CashRequisitionLayout />}>
+            <Route index element={<CashRequisitionDashboard />} />
+            <Route path="new" element={<CashRequisitionForm />} />
           </Route>
           <Route path="/user-exe-dashboard" element={<AccountDashboard />}>
            <Route index element={<EmployeeDetails />}></Route>

@@ -8,9 +8,21 @@ import {
   FaClipboard,
   FaCalculator, // Add extra icons as needed
   FaBriefcase,
+  FaMoneyBillWave,
 } from "react-icons/fa";
 
 export const employeeMenuItems = [
+  {
+    title: "Cash Requisition",
+    icon: FaMoneyBillWave,
+    path: "/cash-requisition",
+    subLinks: [
+      { title: "Dashboard", path: "/cash-requisition" },
+      { title: "My Requests", path: "/cash-requisition/requests" },
+      { title: "New Request", path: "/cash-requisition/new" },
+      { title: "Documents", path: "/cash-requisition/documents" },
+    ],
+  },
   {
     title: "Dashboard",
     icon: FaTachometerAlt,
