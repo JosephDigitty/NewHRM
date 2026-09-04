@@ -129,6 +129,7 @@ const getEmployee = async (req, res) => {
 
 const editEmployee = async (req, res) => {
   try {
+    
     const { id } = req.params;
     const employee = await Employee.findById(id);
     if (!employee) {
@@ -168,4 +169,89 @@ const editEmployee = async (req, res) => {
     }
  }
 
-export {addEmployee, getAllEmployee, getEmployee, editEmployee, getEmployeesByDepartment} 
+const resetEmployeePassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: "Employee ID is required",
+      });
+    }
+
+    // Find employee
+    const employee = await Employee.findById(id).populate("job.department");
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        error: "Employee not found",
+      });
+    }
+
+    const userId = employee.userId
+
+    const user = await User.findOne(userId)
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User account not found",
+      });
+    }
+    
+    const fullname = user.fullname
+    const email = user.email
+
+    const { dob } = employee.personal;
+    const department = employee.job?.department?.departmentName
+    console.log(fullname, email, dob, department)
+    // Generate new password using the SAME format
+    const plainPassword = generatePassword(
+      process.env.COMPANY_NAME || "COMP",
+      fullname,
+      department,
+      dob
+    );
+
+    // Hash password
+    const hashPassword = await bcrypt.hash(plainPassword, 10);
+    
+    user.password = hashPassword;
+
+    await user.save();
+
+    // Send new password by email
+    try {
+      await sendWelcomeEmail({
+        to: email,
+        fullname,
+        email,
+        password: plainPassword,
+      });
+    } catch (emailError) {
+      console.log(
+        "Password reset email failed:",
+        emailError.message
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successfully",
+      temporaryPassword: plainPassword,
+    });
+
+  } catch (error) {
+    console.error("Reset password error:", error);
+
+    return res.status(500).json({
+      success: false,
+      error: "Reset password server error",
+    });
+  }
+};
+
+export {addEmployee, getAllEmployee, getEmployee, editEmployee, getEmployeesByDepartment, resetEmployeePassword} 
+
+

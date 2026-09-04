@@ -23,11 +23,13 @@ const CreatePayroll = ({ onSuccess }) => {
       );
 
       if (response.data.success) {
-        showSuccess(response.data.message)
+        showSuccess("Payroll for period created")
         setLoading(false); 
         if (onSuccess) {
           onSuccess();
         }
+      } else {
+         showError(response.data.message)
       }
     } catch (error) {
       if (error.response && !error.response.data.success) {

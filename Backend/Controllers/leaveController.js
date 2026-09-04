@@ -127,6 +127,40 @@ export const getMyLeaveRequests = async (req, res) => {
   }
 };
 
+
+
+export const getEmployeeLeaveRequests = async (req, res) => {
+  try {
+    const { employeeId } = req.body;
+    console.log("payload Recievd", req.body)
+
+    console.log("Employee ID:", employeeId);
+
+    const leaveRequests = await leaveRequest
+      .find({ employee: employeeId })
+      .populate("leaveType")
+      .populate("employee", "firstName lastName email")
+      .sort({ createdAt: -1 });
+
+    console.log("Leave Requests:", leaveRequests);
+
+    return res.status(200).json({
+      success: true,
+      count: leaveRequests.length,
+      leaveRequests,
+    });
+
+  } catch (error) {
+    console.error("Error fetching employee leave requests:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch employee leave requests",
+      error: error.message,
+    });
+  }
+};
+
 export const getLeaveTypes = async (req, res) => {
   try {
     const leaveTypes = await leaveType.find({}, "_id name daysPerYear").sort({ name: 1 });

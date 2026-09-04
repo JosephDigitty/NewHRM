@@ -28,6 +28,14 @@ const upsertPayroll = async (req, res) => {
 
         // ---- Find the batch for this period (does NOT create one) ----
         const batch = await payrollBatch.findOne({ period })
+
+        const lastBatch = await payrollBatch.findOne().sort({ createdAt: -1 })
+            if (lastBatch && lastBatch.status !== "Paid") {
+                return res.status(400).json({
+                    success: false,
+                    error: `Cannot create a new payroll period. "${lastBatch.payrollPeriodName}" is still in "${lastBatch.status}" status and must be paid before a new period can start.`,
+                });
+            }
         if (!batch) {
             return res.status(404).json({
                 success: false,
@@ -263,9 +271,23 @@ const syncPayrollsForPeriod = async (req, res) => {
         // ---- Find or create the batch for this period ----
         let batch = await payrollBatch.findOne({ period: payDate });
 
-        const user = await User.findById(userId)
-
         if (!batch) {
+            const lastBatch = await payrollBatch.findOne().sort({ createdAt: -1 })
+            if (lastBatch && lastBatch.status !== "Paid") {
+                return res.status(400).json({
+                    success: false,
+                    error: `Cannot create a new payroll period. "${lastBatch.payrollPeriodName}" is still in "${lastBatch.status}" status and must be paid before a new period can start.`,
+                });
+            }
+            const user = await User.findById(userId)
+
+            if(user.role !== "admin") {
+               return res.status(401).json({
+                    success: false,
+                    error: "Unauthorised Request- Only HR can run payroll",
+                }); 
+            }
+
             batch = await payrollBatch.create({
                 period: payDate,
                 payrollPeriodName: payrollperiodName,

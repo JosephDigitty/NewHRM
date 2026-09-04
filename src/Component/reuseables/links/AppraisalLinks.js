@@ -8,19 +8,9 @@ export const appraisalLinks = {
       path: "/appraisal-dashboard/admin",
     },
     {
-      title: "Create Cycle",
+      title: "Manage Cycle",
       icon: FileText,
       path: "/appraisal-dashboard/create-cycle",
-    },
-    {
-      title: "View Cycles",
-      icon: FileText,
-      path: "/appraisal-dashboard/appraisal-cycles",
-    },
-    {
-      title: "Settings",
-      icon: Settings,
-      path: "/appraisal-dashboard/settings",
     },
   ],
 

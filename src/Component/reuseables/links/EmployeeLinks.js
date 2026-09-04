@@ -15,12 +15,12 @@ export const employeeMenuItems = [
   {
     title: "Cash Requisition",
     icon: FaMoneyBillWave,
-    path: "/cash-requisition",
+    path: "/employee-dashboard/cash-requisition",
     subLinks: [
-      { title: "Dashboard", path: "/cash-requisition" },
-      { title: "My Requests", path: "/cash-requisition/requests" },
-      { title: "New Request", path: "/cash-requisition/new" },
-      { title: "Documents", path: "/cash-requisition/documents" },
+      { title: "Dashboard", path: "/employee-dashboard/cash-requisition" },
+      { title: "My Requests", path: "/employee-dashboard/cash-requisition/requests" },
+      { title: "New Request", path: "/employee-dashboard/cash-requisition/new" },
+      { title: "Documents", path: "/employee-dashboard/cash-requisition/documents" },
     ],
   },
   {
@@ -42,7 +42,7 @@ export const employeeMenuItems = [
     subLinks: [
       { title: "Leave Overview", path: "/employee-dashboard/leaves" },
       { title: "Request Leave", path: "/employee-dashboard/add-leave" },
-      { title: "Leave History", path: "/employee-dashboard/leaves" },
+      { title: "Leave History", path: "/employee-dashboard/leaves-history" },
     ],
   },
   // --- ACCOUNTANT ONLY ITEMS ---

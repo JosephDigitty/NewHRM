@@ -1,11 +1,11 @@
 export const generatePassword = (companyName, fullname, department, dob) => {
-  const companyInitials = companyName
+  const companyInitials = String(companyName || "COMP")
     .split(" ")
     .map((w) => w[0])
     .join("")
     .toUpperCase();
 
-  const employeeInitials = fullname
+  const employeeInitials = String(fullname || "EMP")
     .trim()
     .split(" ")
     .map((n) => n[0])

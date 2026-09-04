@@ -2,23 +2,51 @@ import mongoose from "mongoose";
 
 const KpiItemSchema = new mongoose.Schema({
     title: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
+      trim: true,
     },
 
-    description: String,
+    description: {
+      type: String,
+      trim: true,
+    },
+
+
+    target: {
+      type: String,
+      trim: true,
+    },
+
+    measurement: {
+      type: String,
+      trim: true,
+    },
 
     weight: {
-        type: Number,
-        required: true
+      type: Number,
+      required: true,
+      min: 0,
+      max: 100,
+    },
+
+    order: {
+      type: Number,
+      default: 0,
     },
 
     metric: String,
 
     target: String,
 
+    dueDate: String,
+
+    evidenceSource: String,
+
+    actualAchievement:String,
+
     selfScore: {
-        type: Number,
+        type: Number, 
         min: 0,
         max: 5
     },
@@ -61,20 +89,32 @@ const AppraisalSchema = new mongoose.Schema({
 
     kpis: [KpiItemSchema],
 
-    results: {
-    averageSelfScore: Number,
-    averageSupervisorScore: Number,
-    finalScore: Number,
-    rating: String
+
+  coreCompetence : {
+    Communication: String,
+    Teamwork: String,
+    AttentionToDetail: String,
+    Professionalism: String,
+    ClientRelationship: String,
+    WorkingSpirit: String,
+    DesireToLearn: String,
   },
 
-    totalScore: Number,
-
-    rating: String,
+  overAllAssessment: {
+    OverallRating: {String, enum:["Need improvements", "Good", "Very Good", "Excellent", "Oustanding"]},
+    FinalScore: String,
+    Strenghts: String,
+    AreasOfImprovement: String,
+    Training: String,
+    Bonus: String,
+    AdditionalComments: String,
+    OverallRecommendation: String,
+  },
 
     status: {
         type: String,
         enum: [
+            "awaiting Apporval",
             "Awaiting Appraisal",
             "Awaiting supervisor review",
             "Appraised"

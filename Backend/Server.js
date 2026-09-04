@@ -14,6 +14,7 @@ import payrollRouter from "./routes/payroll.js";
 import recordRouter from "./routes/recordRoute.js";
 import hmoRouter from "./routes/hmo.js";
 import batchRouter from "./routes/batch.js";
+import cashRouter from "./routes/CashRequest.js";
 import statutoryRouter from "./routes/statutory.js";
 import appraisalRouter from "./routes/appraisal.js";
 import todoRouter from "./routes/Todo.js";
@@ -45,6 +46,7 @@ app.use("/api/appraisal", appraisalRouter);
 app.use("/api/todo", todoRouter);
 app.use("/api/employee", recordRouter);
 app.use("/api", batchRouter);
+app.use("/api/cash", cashRouter);
 app.use(
   "/uploads",
   express.static(path.join(path.resolve(), "public/uploads"))

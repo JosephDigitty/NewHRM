@@ -69,6 +69,7 @@ const editAppraisalPeriod = async (req, res) => {
 const setKpiGoals = async (req, res) => {
   //TESTED AND WORKING FINE
   try {
+    console.log("payload recieved", req.body)
     const {employeeId, supervisorId, appraisalCycleId, kpis } = req.body
      const existing = await Appraisal.findOne({
       employee:employeeId,
@@ -138,6 +139,12 @@ const getKpiGoal = async (req, res) => {
   const appraisals = await Appraisal.findById(id)
   .populate({
     path: "supervisor",
+    populate: {
+      path: "userId",
+      model: "User"
+    }
+  }).populate({
+    path: "employee",
     populate: {
       path: "userId",
       model: "User"
@@ -246,7 +253,7 @@ const submitSelfScores = async (req, res) => {
   try {
     console.log("payload recieved", req.body)
 
-    const {appraisalId, scores, overallFeedback}  = req.body
+    const {appraisalId, scores, actualAchievement}  = req.body
     /*
     expected body
 
@@ -264,19 +271,27 @@ const submitSelfScores = async (req, res) => {
     */
 
     const appraisal = await Appraisal.findById(appraisalId)
-    const appraisalCycleId = await appraisal.cycle
-    const cycle = await AppraisalCycle.findById(appraisalCycleId)
-    if (cycle.status === "closed") {
-      return res.status(400).json({
-        message: "Appraisal Cycle is not Open for appraisal",
-        success:false
-      })
-    }
-
     if (!appraisal) {
       return res.status(404).json({
-        message: "Appraisal not found"
-      })
+        success: false,
+        message: "Appraisal not found",
+      });
+    }
+    
+    const appraisalCycleId = await appraisal.cycle
+    const cycle = await AppraisalCycle.findById(appraisalCycleId)
+    if (!cycle) {
+      return res.status(404).json({
+        success: false,
+        message: "Appraisal cycle not found",
+      });
+    }
+
+  if (cycle.status === "closed") {
+      return res.status(400).json({
+        success: false,
+        message: "Appraisal Cycle is not Open for appraisal",
+      });
     }
 
     scores.forEach(score => {
@@ -286,13 +301,12 @@ const submitSelfScores = async (req, res) => {
       if (kpi) {
         kpi.selfScore = score.selfScore
         kpi.selfComment = score.selfComment
+        kpi.actualAchievement = score.actualAchievement
       }
 
     })
 
     appraisal.status = "Awaiting supervisor review"
-
-    appraisal.overallFinalComment = overallFeedback
 
     await appraisal.save()
  

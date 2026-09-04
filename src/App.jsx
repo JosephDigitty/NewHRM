@@ -3,7 +3,6 @@ import { ToastProvider } from "./Context/ToastContext";
 import ToastContainer from "./Component/reuseables/ToastContainer";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
-
 import Employees from "./Component/Employees";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import Department from "./Component/Departments";
@@ -35,7 +34,6 @@ import GenerateITF from "./Component/Payroll/GenerateITF";
 import GenerateNSITF from "./Component/Payroll/GenerateNSITF";
 import GeneratePayrollForBank from "./Component/Payroll/PayrollforBank";
 import EmployeeProfile from "./Component/EmployeeDashBoard/EmployeeProfile";
-import CashRequisitionDashboard from "./pages/CashRequisitionDashboard";
 import CashRequisitionForm from "./pages/CashRequisitionForm";
 import CashRequisitionLayout from "./pages/CashRequisitionLayout";
 import CreateHmo from "./Component/Hmo/CreateHmo";
@@ -62,7 +60,6 @@ import AppraisalCycles from "./pages/ApprisalCycles";
 import EditAppraisalCycle from "./pages/EditAppraisalCycle";
 import SupervisorReview from "./pages/SupervisorReview";
 import PerformanceResults from "./pages/PerformanceResults";
-import MyAppraisals from "./pages/MyAppraisals";
 import SupervisorAppraisals from "./pages/SupervisorAppraisal";
 import GeneratePayee from "./Component/Payroll/GeneratePAYE";
 import GeneratePayrollNew from "./Component/Payroll/GeneratePayrollN";
@@ -70,6 +67,14 @@ import EditHmo from "./Component/Hmo/EditHmo";
 import OldPayrollDashboard from "./Component/Payroll/OldPayrollDashboard";
 import AccountDashboard from "./pages/AccountDashboard";
 import AccountPayrollDashboard from "./Component/Payroll/PayrollDashboardAccount";
+import KpiGoals from "./pages/NewAppraisalPages/Kpigoals";
+import SelfAppraisal from "./pages/NewAppraisalPages/SelfAppraisal";
+import MyAppraisals from "./pages/NewAppraisalPages/MyAppraisal";
+import AppraisalPeriods from "./pages/NewAppraisalPages/AppraisalPeriods";
+import PerformanceReports from "./pages/NewAppraisalPages/PerformamceReport";
+import MyTeamAppraisals from "./pages/NewAppraisalPages/TeamAppraisal";
+import AppraiseEmployee from "./pages/NewAppraisalPages/AppraiseEmployee";
+import EmployeeLeaves from "./pages/EmployeePages/LeaveHistory";
 
 const App = () => {
   return (
@@ -85,7 +90,9 @@ const App = () => {
             path="/appraisal-dashboard"
             element={
               <ProtectedRoute allowedRoles={["admin", "HR", "employee"]}>
-                <AppraisalDashboard />
+                <AppraisalLayout>
+                  <PerformanceReports />
+                </AppraisalLayout>
               </ProtectedRoute>
             }
           />
@@ -93,7 +100,9 @@ const App = () => {
             path="/appraisal-dashboard/admin"
             element={
               <ProtectedRoute allowedRoles={["admin", "HR"]}>
-                <AdminAppraisalDashboard />
+                  <AppraisalLayout>
+                      <PerformanceReports />
+                  </AppraisalLayout>
               </ProtectedRoute>
             }
           />
@@ -107,12 +116,24 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+
+
+           <Route
+            path="/appraisal-dashboard/self-appraisal"
+            element={
+              <ProtectedRoute allowedRoles={["employee"]}>
+                <AppraisalLayout>
+                  <SelfAppraisal />
+                </AppraisalLayout>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/appraisal-dashboard/Team-appraisals"
             element={
               <ProtectedRoute allowedRoles={["employee"]}>
                 <AppraisalLayout>
-                  <SupervisorAppraisals />
+                  <MyTeamAppraisals />
                 </AppraisalLayout>
               </ProtectedRoute>
             }
@@ -121,7 +142,9 @@ const App = () => {
             path="/appraisal-dashboard/employee"
             element={
               <ProtectedRoute allowedRoles={["employee"]}>
-                <EmployeeAppraisalDashboard />
+                <AppraisalLayout>
+                <MyAppraisals />
+                </AppraisalLayout>
               </ProtectedRoute>
             }
           />
@@ -130,7 +153,7 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={["employee"]}>
                 <AppraisalLayout>
-                  <EmployeeSelfAppraisal />
+                  <SelfAppraisal />
                 </AppraisalLayout>
               </ProtectedRoute>
             }
@@ -150,7 +173,7 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={["admin", "HR"]}>
                 <AppraisalLayout>
-                  <CreateAppraisalCycle />
+                  <AppraisalPeriods/>
                 </AppraisalLayout>
               </ProtectedRoute>
             }
@@ -180,7 +203,17 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={["employee"]}>
                 <AppraisalLayout>
-                  <AssignKpiPage />
+                  <KpiGoals />
+                </AppraisalLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/appraisal-dashboard/supervisor"
+            element={
+              <ProtectedRoute allowedRoles={["employee"]}>
+                <AppraisalLayout>
+                  <AppraiseEmployee />
                 </AppraisalLayout>
               </ProtectedRoute>
             }
@@ -323,6 +356,7 @@ const App = () => {
               path="/employee-dashboard/profile/"
               element={<EmployeeProfile />}
             ></Route>
+            
             <Route
               path="/employee-dashboard/salary-overview/"
               element={<SalaryOverview />}
@@ -339,10 +373,14 @@ const App = () => {
               path="/employee-dashboard/add-leave"
               element={<RequestLeave />}
             ></Route>
-          </Route>
-          <Route path="/cash-requisition" element={<CashRequisitionLayout />}>
-            <Route index element={<CashRequisitionDashboard />} />
-            <Route path="new" element={<CashRequisitionForm />} />
+            <Route
+              path="/employee-dashboard/leaves-history"
+              element={<EmployeeLeaves />}
+            ></Route>
+            <Route
+              path="/employee-dashboard/cash-requisition"
+              element={<CashRequisitionForm />}
+            ></Route>
           </Route>
           <Route path="/user-exe-dashboard" element={<AccountDashboard />}>
            <Route index element={<EmployeeDetails />}></Route>

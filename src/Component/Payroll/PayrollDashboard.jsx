@@ -427,6 +427,57 @@ const handleReject = async (comment) => {
     default:
       return { name: "Accounts Department", role: "Review & Approval" };
   }
+}; 
+
+  const getStatusLabel = (status) => {
+  switch (status) {
+    case "Draft":
+      return "To be submitted for Accounts Review";
+    case "Pending Accounts Review":
+      return "Pending Accounts Review";
+    case "Pending Director Review":
+      return "Pending Director Review";
+    case "Approved":
+      return "Awaiting payment from Account";
+    case "paid":
+      return "Closed";
+    default:
+      return status || "Unknown";
+  }
+};
+
+  const getStatusDesription = (status) => {
+  switch (status) {
+    case "Draft":
+      return "To be Submitted to Accounts Department";
+    case "Pending Accounts Review":
+      return "Submitted and awaiting review by Accounts Department";
+    case "Pending Director Review":
+      return "Submitted and awaiting review by Accounts Department";
+      case "Approved":
+         return "Awaiting payments by Accounts Department";
+      case "paid":
+      return "Payroll is closed";
+    default:
+      return status || "Unknown";
+  }
+}; 
+
+  const getNextApprovalLabel = (status) => {
+  switch (status) {
+    case "Draft":
+      return "Account Department";
+    case "Pending Accounts Review":
+      return "Account Department";
+    case "Pending Director Review":
+      return "Director Office";
+    case "Approved":
+      return "Account's Payment";
+    case "Paid":
+      return "closed";
+    default:
+      return status || "Unknown";
+  }
 };
 
   return (
@@ -451,8 +502,8 @@ const handleReject = async (comment) => {
             grossPayroll={total?.grossPayroll || 0}
             totalDeductions={total?.totalDeductions || 0}
             totalNetPay={total?.totalNetPay || 0}
-            status="Pending Accounts Review"
-            statusDescription="Submitted and awaiting review by Accounts Department"
+            status={getStatusLabel(batch?.status)}
+            statusDescription={getStatusDesription(batch?.status)}
           />
 
           <WorkflowSection
