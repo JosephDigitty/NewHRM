@@ -77,7 +77,7 @@ const PersonalInfoForm = ({
         <select name="authorisation"
         onChange={handleChange}
         value={formData.authorisation}
-        className="border border-purple-700 items-center px-4 py-2 w-[350px] h-[45px] mt-5 rounded-full"
+        className="border border-purple-700 items-center px-1 py-2 w-[250px] h-[45px] mt-5 rounded-full"
         >
         <option value="">Authorization</option>
         <option value="Account">Account/Finance</option>

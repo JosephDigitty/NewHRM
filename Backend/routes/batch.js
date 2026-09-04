@@ -1,7 +1,7 @@
 import express from 'express'
-import { getLatestBatch } from "../Controllers/BatchPayroll,js"
-import { submitPayrollForReview } from '../Controllers/BatchPayroll,js'
-import { acceptPayroll } from '../Controllers/BatchPayroll,js'
+import { getLatestBatch } from "../Controllers/BatchPayroll.js"
+import { submitPayrollForReview } from '../Controllers/BatchPayroll.js'
+import { acceptPayroll } from '../Controllers/BatchPayroll.js'
 
 const router = express.Router()
 
